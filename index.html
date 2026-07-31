@@ -68,7 +68,13 @@
     }
     .header-left { display: flex; align-items: center; gap: 1rem; }
     .header-left .logo-svg, .header-left .logo-img { width: 44px; height: auto; margin: 0; }
-    .header-left h1 { font-size: 1.15rem; letter-spacing: 0.5px; }
+    .header-left h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
     .logout-btn {
       background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3);
       padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.9rem;
@@ -99,14 +105,50 @@
     .card h3 { font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--forest-dark); font-family: 'Inter', sans-serif; font-weight: 600; }
 
     .form-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.25rem 1rem; margin-bottom: 1.25rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
     }
-    .form-grid .form-group { margin-bottom: 0; min-width: 0; }
+    .form-grid .form-group {
+      margin-bottom: 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
     .form-grid label {
-      display: block; font-size: 0.85rem; font-weight: 600;
-      color: var(--forest-dark); margin-bottom: 0.4rem;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--forest-dark);
+      margin-bottom: 0.4rem;
+      line-height: 1.3;
+      min-height: 1.3em;
+    }
+    .form-grid input {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+      -webkit-min-logical-width: 0;
+    }
+    /* iOS Safari Fix: Date-Input hat sonst feste Mindestbreite und ragt in Nachbarspalte */
+    .form-grid input[type="date"] {
+      -webkit-appearance: none;
+      appearance: none;
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 0.75rem 1rem;
+      background: white;
+      color: var(--text);
+      text-align: left;
+    }
+    /* Zusätzlicher Fallback für schmale Ansichten */
+    @media (max-width: 700px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .form-grid { grid-template-columns: 1fr; }
     }
     .form-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
     .form-actions .btn { width: auto; }
@@ -208,7 +250,7 @@
               <input type="number" id="pPh" step="0.01" min="0" max="14" placeholder="z. B. 7.20" required />
             </div>
             <div class="form-group">
-              <label for="pFcl">fCL (mg/L)</label>
+              <label for="pFcl">fCL (ppm)</label>
               <input type="number" id="pFcl" step="0.01" min="0" placeholder="z. B. 1.20" required />
             </div>
             <div class="form-group">
@@ -594,14 +636,14 @@ function renderPool() {
       labels,
       datasets: [
         { label: 'pH-Wert', data: data.map(e => e.ph), borderColor: '#1f4a30', backgroundColor: 'rgba(31,74,48,0.1)', yAxisID: 'y', tension: 0.3 },
-        { label: 'fCL (mg/L)', data: data.map(e => e.fcl), borderColor: '#a03030', backgroundColor: 'rgba(160,48,48,0.1)', yAxisID: 'y1', tension: 0.3 },
+        { label: 'fCL (ppm)', data: data.map(e => e.fcl), borderColor: '#a03030', backgroundColor: 'rgba(160,48,48,0.1)', yAxisID: 'y1', tension: 0.3 },
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       scales: {
         y: { position: 'left', title: { display: true, text: 'pH' } },
-        y1: { position: 'right', title: { display: true, text: 'fCL (mg/L)' }, grid: { drawOnChartArea: false } },
+        y1: { position: 'right', title: { display: true, text: 'fCL (ppm)' }, grid: { drawOnChartArea: false } },
       }
     }
   });
@@ -852,7 +894,7 @@ async function exportPoolPdf() {
   const avgAlk = (data.reduce((s,e)=>s+e.alk,0)/data.length).toFixed(0);
   doc.text(`Anzahl Messungen: ${data.length}`, 15, y); y += 5;
   doc.text(`Zeitraum: ${fmtDate(data[0].date)} – ${fmtDate(data[data.length-1].date)}`, 15, y); y += 5;
-  doc.text(`Durchschnitt: pH ${avgPh}  |  fCL ${avgFcl} mg/L  |  Temp. ${avgTemp} °C  |  Alkalinität ${avgAlk} mg/L`, 15, y); y += 8;
+  doc.text(`Durchschnitt: pH ${avgPh}  |  fCL ${avgFcl} ppm  |  Temp. ${avgTemp} °C  |  Alkalinität ${avgAlk} mg/L`, 15, y); y += 8;
 
   // Charts
   const img1 = await chartToImage('chartPhFcl');
@@ -866,7 +908,7 @@ async function exportPoolPdf() {
   pdfHeader(doc, 'Schwimmbadpflege – Bericht');
   doc.autoTable({
     startY: 35,
-    head: [['Datum', 'pH', 'fCL (mg/L)', 'Temp. (°C)', 'Alkalinität (mg/L)']],
+    head: [['Datum', 'pH', 'fCL (ppm)', 'Temp. (°C)', 'Alkalinität (mg/L)']],
     body: data.map(e => [fmtDate(e.date), e.ph.toFixed(2), e.fcl.toFixed(2), e.temp.toFixed(1), e.alk.toFixed(0)]),
     headStyles: { fillColor: [31, 74, 48] },
     styles: { font: 'helvetica', fontSize: 9 },
@@ -1308,7 +1350,7 @@ function exportBackup() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `waldvilla_backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.download = `${new Date().toISOString().split('T')[0]} Waldvilla Wangen DB.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
