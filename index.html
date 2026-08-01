@@ -407,7 +407,7 @@
         <!-- Wetter & Multitab -->
         <div class="dashboard-grid">
           <div class="card">
-            <h3>🌤️ Wetter in Wangen</h3>
+            <h3>🌤️ Wetter in Stuttgart-Wangen</h3>
             <div id="weatherContent"><div class="empty-hint">Wetterdaten werden geladen…</div></div>
           </div>
           <div class="card">
@@ -887,7 +887,7 @@ const WASSER_KEY = "wv_wasser_data";
 const RECHNUNG_KEY = "wv_rechnung_data";
 
 /* Standort für Wetterdaten – bei Bedarf anpassen */
-const WEATHER_LOCATION = { latitude: 47.6844, longitude: 9.8351, name: "Wangen im Allgäu" };
+const WEATHER_LOCATION = { latitude: 48.7625, longitude: 9.2310, name: "Stuttgart-Wangen" };
 
 /* Ampel-Grenzwerte für Poolwerte */
 const POOL_THRESHOLDS = {
@@ -963,8 +963,6 @@ function logout() {
   sessionStorage.removeItem(AUTH_KEY);
   location.reload();
 }
-
-if (sessionStorage.getItem(AUTH_KEY) === "1") { showApp(); }
 
 /* =========================================================
    TABS
@@ -2312,6 +2310,12 @@ function importBackup(event) {
   };
   reader.readAsText(file);
 }
+
+/* =========================================================
+   AUTO-LOGIN wenn schon angemeldet (MUSS ganz am Ende stehen,
+   damit alle Funktionen und let-Variablen zuerst definiert sind)
+   ========================================================= */
+if (sessionStorage.getItem(AUTH_KEY) === "1") { showApp(); }
 </script>
 </body>
 </html>
