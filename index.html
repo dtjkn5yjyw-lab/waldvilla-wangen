@@ -182,6 +182,150 @@
     .chart-wrap { position: relative; height: 320px; margin-bottom: 1rem; }
     .empty-hint { color: var(--muted); text-align: center; padding: 2rem 1rem; font-style: italic; }
 
+    /* ===== SUBTABS ===== */
+    .subtabs {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+      margin-bottom: 1.5rem; padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .subtab-btn {
+      background: transparent; border: 1px solid var(--border);
+      padding: 0.5rem 1rem; border-radius: 999px; cursor: pointer;
+      font-family: inherit; font-size: 0.9rem; font-weight: 500;
+      color: var(--muted); transition: all 0.2s;
+    }
+    .subtab-btn:hover { border-color: var(--forest); color: var(--forest); }
+    .subtab-btn.active { background: var(--forest); color: white; border-color: var(--forest); }
+    .subtab-panel { display: none; }
+    .subtab-panel.active { display: block; }
+
+    /* ===== POOL-STATUSKARTE ===== */
+    .status-card {
+      border-left: 6px solid var(--muted);
+      background: var(--paper);
+    }
+    .status-card.green { border-left-color: #2d8f47; background: linear-gradient(to right, rgba(45,143,71,0.08), var(--paper) 30%); }
+    .status-card.yellow { border-left-color: #d4a017; background: linear-gradient(to right, rgba(212,160,23,0.10), var(--paper) 30%); }
+    .status-card.red { border-left-color: #c03030; background: linear-gradient(to right, rgba(192,48,48,0.10), var(--paper) 30%); }
+    .status-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    .status-emoji { font-size: 2.5rem; line-height: 1; }
+    .status-header h2 { flex: 1; margin: 0; }
+    .status-values {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem; margin-bottom: 1rem;
+    }
+    .status-value {
+      background: white; border-radius: 8px; padding: 0.75rem;
+      border-left: 4px solid var(--border);
+    }
+    .status-value.green { border-left-color: #2d8f47; }
+    .status-value.yellow { border-left-color: #d4a017; }
+    .status-value.red { border-left-color: #c03030; }
+    .status-value .sv-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+    .status-value .sv-num { font-size: 1.35rem; font-weight: 700; color: var(--forest-dark); margin-top: 0.15rem; }
+    .status-value .sv-target { font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+    .status-recommendation {
+      background: white; padding: 0.75rem 1rem; border-radius: 8px;
+      font-size: 0.95rem; color: var(--forest-dark);
+      border: 1px solid var(--border);
+    }
+
+    /* ===== DASHBOARD GRID ===== */
+    .dashboard-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem; margin-bottom: 1.5rem;
+    }
+    .dashboard-grid .card { margin-bottom: 0; }
+    .mini-charts-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .mini-charts-grid > div { background: white; border-radius: 8px; padding: 0.75rem; border: 1px solid var(--border); }
+    .mini-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; margin-bottom: 0.5rem; }
+    .chart-mini { position: relative; height: 100px; }
+
+    /* Wetter */
+    .weather-current { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.75rem; }
+    .weather-icon { font-size: 2.5rem; }
+    .weather-temp { font-size: 1.75rem; font-weight: 700; color: var(--forest-dark); }
+    .weather-desc { color: var(--muted); font-size: 0.9rem; }
+    .weather-forecast { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem; }
+    .weather-day {
+      flex: 0 0 auto; background: white; border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.5rem 0.75rem; text-align: center; min-width: 65px;
+    }
+    .weather-day-label { font-size: 0.7rem; color: var(--muted); }
+    .weather-day-icon { font-size: 1.25rem; margin: 0.15rem 0; }
+    .weather-day-temp { font-size: 0.8rem; font-weight: 600; }
+    .weather-day-rain { font-size: 0.7rem; color: #2d6a8f; margin-top: 0.15rem; }
+
+    /* Multitab-Anzeige */
+    .multitab-status {
+      background: white; border: 1px solid var(--border); border-radius: 8px;
+      padding: 1rem; text-align: center;
+    }
+    .multitab-days { font-size: 2rem; font-weight: 700; color: var(--forest); }
+    .multitab-info { font-size: 0.85rem; color: var(--muted); margin-top: 0.35rem; }
+
+    /* Zeitleiste (Historie) */
+    .timeline-filter { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .filter-chip {
+      background: white; border: 1px solid var(--border); padding: 0.35rem 0.75rem;
+      border-radius: 999px; cursor: pointer; font-size: 0.85rem; user-select: none;
+    }
+    .filter-chip.active { background: var(--forest); color: white; border-color: var(--forest); }
+    .timeline { display: flex; flex-direction: column; gap: 0.5rem; }
+    .timeline-item {
+      display: flex; gap: 1rem; padding: 0.75rem 1rem;
+      background: white; border: 1px solid var(--border); border-radius: 8px;
+      border-left: 4px solid var(--border);
+    }
+    .timeline-item.type-measurement { border-left-color: #2d6a44; }
+    .timeline-item.type-dosing { border-left-color: #c68b2d; }
+    .timeline-item.type-filter { border-left-color: #2d6a8f; }
+    .timeline-item.type-multitab { border-left-color: #7a3c9a; }
+    .timeline-item.type-note { border-left-color: var(--muted); }
+    .timeline-date { flex: 0 0 auto; font-size: 0.85rem; color: var(--muted); min-width: 90px; }
+    .timeline-content { flex: 1; }
+    .timeline-title { font-weight: 600; color: var(--forest-dark); font-size: 0.95rem; }
+    .timeline-detail { font-size: 0.85rem; color: var(--muted); margin-top: 0.15rem; }
+    .timeline-delete { background: none; border: none; color: var(--danger); cursor: pointer; padding: 0 0.5rem; }
+
+    /* Wissensdatenbank */
+    .kb-item {
+      background: white; border: 1px solid var(--border); border-radius: 8px;
+      margin-bottom: 0.75rem; overflow: hidden;
+    }
+    .kb-header {
+      padding: 0.75rem 1rem; display: flex; justify-content: space-between;
+      align-items: center; cursor: pointer; background: rgba(31, 74, 48, 0.03);
+      user-select: none;
+    }
+    .kb-header:hover { background: rgba(31, 74, 48, 0.08); }
+    .kb-title { font-weight: 600; color: var(--forest-dark); flex: 1; }
+    .kb-toggle { color: var(--muted); font-size: 1.25rem; margin-left: 0.5rem; }
+    .kb-body { padding: 1rem; display: none; border-top: 1px solid var(--border); }
+    .kb-item.open .kb-body { display: block; }
+    .kb-item.open .kb-toggle { transform: rotate(45deg); }
+    .kb-field { margin-bottom: 0.75rem; }
+    .kb-field-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem; }
+    .kb-field-value { font-size: 0.95rem; white-space: pre-wrap; }
+    .kb-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .kb-btn-small {
+      background: transparent; border: 1px solid var(--border); padding: 0.35rem 0.75rem;
+      border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-family: inherit;
+    }
+    .kb-btn-small:hover { border-color: var(--forest); color: var(--forest); }
+    .kb-btn-small.danger { color: var(--danger); }
+    .kb-btn-small.danger:hover { border-color: var(--danger); }
+    textarea {
+      width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.95rem; font-family: inherit;
+      background: white; min-height: 3.5rem; resize: vertical;
+      box-sizing: border-box;
+    }
+    textarea:focus { outline: none; border-color: var(--forest); }
+
     @media (max-width: 640px) {
       header.app-header { padding: 0.75rem 1rem; }
       .header-left h1 { font-size: 1rem; }
@@ -237,65 +381,297 @@
   <main>
     <!-- ===== POOL TAB ===== -->
     <section class="tab-panel active" id="tab-pool">
-      <div class="card">
-        <h2>Neue Messung erfassen</h2>
-        <form id="poolForm">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="pDate">Datum</label>
-              <input type="date" id="pDate" required />
-            </div>
-            <div class="form-group">
-              <label for="pPh">pH-Wert</label>
-              <input type="number" id="pPh" step="0.01" min="0" max="14" placeholder="z. B. 7.20" required />
-            </div>
-            <div class="form-group">
-              <label for="pFcl">fCL (ppm)</label>
-              <input type="number" id="pFcl" step="0.01" min="0" placeholder="z. B. 1.20" required />
-            </div>
-            <div class="form-group">
-              <label for="pTemp">Wassertemperatur (°C)</label>
-              <input type="number" id="pTemp" step="0.1" placeholder="z. B. 24.5" required />
-            </div>
-            <div class="form-group">
-              <label for="pAlk">Alkalinität (mg/L)</label>
-              <input type="number" id="pAlk" step="1" min="0" placeholder="z. B. 120" required />
-            </div>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn">Speichern</button>
-            <button type="button" class="btn btn-secondary" onclick="exportPoolPdf()">📄 PDF-Bericht exportieren</button>
-          </div>
-        </form>
+      <!-- Sub-Navigation -->
+      <div class="subtabs">
+        <button class="subtab-btn active" data-subtab="dashboard">📊 Dashboard</button>
+        <button class="subtab-btn" data-subtab="erfassen">✏️ Erfassen</button>
+        <button class="subtab-btn" data-subtab="historie">📈 Historie</button>
+        <button class="subtab-btn" data-subtab="wissen">🧠 Wissen</button>
       </div>
 
-      <div class="card">
-        <h2>Verlauf</h2>
-        <div id="poolEmpty" class="empty-hint">Noch keine Messungen erfasst.</div>
-        <div id="poolCharts" style="display:none;">
-          <h3>pH-Wert & fCL</h3>
-          <div class="chart-wrap"><canvas id="chartPhFcl"></canvas></div>
-          <h3>Wassertemperatur & Alkalinität</h3>
-          <div class="chart-wrap"><canvas id="chartTempAlk"></canvas></div>
+      <!-- ============ DASHBOARD ============ -->
+      <div class="subtab-panel active" id="sub-dashboard">
+        <!-- Status-Ampel -->
+        <div class="card status-card" id="poolStatusCard">
+          <div class="status-header">
+            <span class="status-emoji" id="statusEmoji">⚪</span>
+            <div style="flex:1;">
+              <h2 id="statusTitle">Noch keine Messungen</h2>
+              <div class="stat-label" id="statusSubtitle" style="margin-top:0.25rem;"></div>
+            </div>
+          </div>
+          <div class="status-values" id="statusValues"></div>
+          <div class="status-recommendation" id="statusRecommendation">Erfasse deine erste Messung, um den Pool-Status zu sehen.</div>
+        </div>
+
+        <!-- Wetter & Multitab -->
+        <div class="dashboard-grid">
+          <div class="card">
+            <h3>🌤️ Wetter in Wangen</h3>
+            <div id="weatherContent"><div class="empty-hint">Wetterdaten werden geladen…</div></div>
+          </div>
+          <div class="card">
+            <h3>💊 Multitab-Prognose</h3>
+            <div id="multitabContent">
+              <div class="empty-hint">Keine Multitab-Zeitpunkte erfasst.<br><small>Erfasse unter „Erfassen → Multitab neu eingelegt"</small></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini-Trends -->
+        <div class="card">
+          <h3>📉 Trends der letzten Wochen</h3>
+          <div id="miniChartsEmpty" class="empty-hint">Mindestens 2 Messungen für Trendanzeige nötig.</div>
+          <div class="mini-charts-grid" id="miniCharts" style="display:none;">
+            <div>
+              <div class="mini-label">pH-Wert</div>
+              <div class="chart-mini"><canvas id="miniChartPh"></canvas></div>
+            </div>
+            <div>
+              <div class="mini-label">FCL (ppm)</div>
+              <div class="chart-mini"><canvas id="miniChartFcl"></canvas></div>
+            </div>
+            <div>
+              <div class="mini-label">Alkalinität (mg/L)</div>
+              <div class="chart-mini"><canvas id="miniChartAlk"></canvas></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="card">
-        <h2>Alle Einträge</h2>
-        <div class="table-wrap">
-          <table id="poolTable">
-            <thead>
-              <tr>
-                <th>Datum</th>
-                <th>pH</th>
-                <th>fCL</th>
-                <th>Temp. (°C)</th>
-                <th>Alkalinität</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+      <!-- ============ ERFASSEN ============ -->
+      <div class="subtab-panel" id="sub-erfassen">
+        <div class="card">
+          <h2>💧 Messung erfassen</h2>
+          <form id="poolForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="pDate">Datum</label>
+                <input type="date" id="pDate" required />
+              </div>
+              <div class="form-group">
+                <label for="pPh">pH-Wert</label>
+                <input type="number" id="pPh" step="0.01" min="0" max="14" placeholder="z. B. 7.20" required />
+              </div>
+              <div class="form-group">
+                <label for="pFcl">fCL (ppm)</label>
+                <input type="number" id="pFcl" step="0.01" min="0" placeholder="z. B. 1.20" required />
+              </div>
+              <div class="form-group">
+                <label for="pTemp">Wassertemperatur (°C)</label>
+                <input type="number" id="pTemp" step="0.1" placeholder="z. B. 24.5" required />
+              </div>
+              <div class="form-group">
+                <label for="pAlk">Alkalinität (mg/L)</label>
+                <input type="number" id="pAlk" step="1" min="0" placeholder="z. B. 120" required />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn">Speichern</button>
+              <button type="button" class="btn btn-secondary" onclick="exportPoolPdf()">📄 PDF-Bericht</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>🧪 Zugabe / Dosierung</h2>
+          <form id="dosingForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="doDate">Datum</label>
+                <input type="date" id="doDate" required />
+              </div>
+              <div class="form-group">
+                <label for="doProduct">Produkt</label>
+                <input type="text" id="doProduct" placeholder="z. B. pH-Plus, Algizid" required />
+              </div>
+              <div class="form-group">
+                <label for="doAmount">Menge</label>
+                <input type="text" id="doAmount" placeholder="z. B. 100 g, 250 ml" required />
+              </div>
+              <div class="form-group">
+                <label for="doReason">Grund (optional)</label>
+                <input type="text" id="doReason" placeholder="z. B. pH-Anhebung" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn">Zugabe eintragen</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>💊 Multitab neu eingelegt</h2>
+          <form id="multitabForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="mtDate">Datum</label>
+                <input type="date" id="mtDate" required />
+              </div>
+              <div class="form-group">
+                <label for="mtCount">Anzahl Tabs</label>
+                <input type="number" id="mtCount" min="1" step="1" placeholder="z. B. 2" required />
+              </div>
+              <div class="form-group">
+                <label for="mtNote">Bemerkung (optional)</label>
+                <input type="text" id="mtNote" placeholder="z. B. Marke, Sondersituation" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn">Multitab-Eintrag speichern</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>🔧 Filterwechsel / Reinigung</h2>
+          <form id="filterForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="fiDate">Datum</label>
+                <input type="date" id="fiDate" required />
+              </div>
+              <div class="form-group">
+                <label for="fiType">Art</label>
+                <select id="fiType" required>
+                  <option value="Rückspülung">Rückspülung</option>
+                  <option value="Reinigung">Reinigung</option>
+                  <option value="Sandwechsel">Sandwechsel</option>
+                  <option value="Kartuschentausch">Kartuschentausch</option>
+                  <option value="Sonstiges">Sonstiges</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="fiNote">Bemerkung (optional)</label>
+                <input type="text" id="fiNote" placeholder="z. B. Nach Starkregen" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn">Filter-Eintrag speichern</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>📝 Bemerkung / Beobachtung</h2>
+          <form id="noteForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="noDate">Datum</label>
+                <input type="date" id="noDate" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="noText">Bemerkung</label>
+              <textarea id="noText" placeholder="z. B. 9 Badegäste heute, Wasser leicht trüb..." required></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn">Bemerkung speichern</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============ HISTORIE ============ -->
+      <div class="subtab-panel" id="sub-historie">
+        <div class="card">
+          <h2>📅 Zeitleiste</h2>
+          <div class="timeline-filter" id="timelineFilter">
+            <span class="filter-chip active" data-filter="all">Alle</span>
+            <span class="filter-chip" data-filter="measurement">💧 Messungen</span>
+            <span class="filter-chip" data-filter="dosing">🧪 Zugaben</span>
+            <span class="filter-chip" data-filter="multitab">💊 Multitab</span>
+            <span class="filter-chip" data-filter="filter">🔧 Filter</span>
+            <span class="filter-chip" data-filter="note">📝 Bemerkungen</span>
+          </div>
+          <div id="timelineEmpty" class="empty-hint">Noch keine Einträge vorhanden.</div>
+          <div class="timeline" id="timelineList"></div>
+        </div>
+
+        <div class="card">
+          <h2>📊 Verlauf</h2>
+          <div id="poolEmpty" class="empty-hint">Noch keine Messungen erfasst.</div>
+          <div id="poolCharts" style="display:none;">
+            <h3>pH-Wert & fCL</h3>
+            <div class="chart-wrap"><canvas id="chartPhFcl"></canvas></div>
+            <h3>Wassertemperatur & Alkalinität</h3>
+            <div class="chart-wrap"><canvas id="chartTempAlk"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>📋 Alle Messungen</h2>
+          <div class="table-wrap">
+            <table id="poolTable">
+              <thead>
+                <tr>
+                  <th>Datum</th><th>pH</th><th>fCL</th><th>Temp. (°C)</th><th>Alkalinität</th><th></th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ WISSEN ============ -->
+      <div class="subtab-panel" id="sub-wissen">
+        <div class="card">
+          <h2>📖 Was wir über unseren Pool gelernt haben</h2>
+          <form id="factsForm">
+            <div class="form-group">
+              <label for="factsText">Unsere Pool-Fakten (frei editierbar)</label>
+              <textarea id="factsText" rows="10" placeholder="Trage hier eure gesammelten Erkenntnisse ein..."></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn">Fakten speichern</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>🧠 Wissensdatenbank – Situationen</h2>
+          <p style="color:var(--muted); margin-bottom:1rem; font-size:0.9rem;">
+            Erfasse Situationen, die immer wieder vorkommen — was war die Ursache, was habt ihr gemacht, wie war das Ergebnis?
+          </p>
+          <button class="btn btn-secondary" onclick="toggleKbForm()" style="width:auto; margin-bottom:1rem;">➕ Neue Situation erfassen</button>
+
+          <div id="kbFormWrap" style="display:none; background:white; padding:1rem; border-radius:8px; border:1px solid var(--border); margin-bottom:1rem;">
+            <form id="kbForm">
+              <input type="hidden" id="kbId" value="" />
+              <div class="form-group">
+                <label for="kbTitle">Titel der Situation</label>
+                <input type="text" id="kbTitle" placeholder="z. B. Starkregen, 9 Badegäste, PoolLab zeigt UR" required />
+              </div>
+              <div class="form-group">
+                <label for="kbCause">Ursache / Auslöser</label>
+                <textarea id="kbCause" placeholder="Was war der Auslöser?"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="kbSymptoms">Symptome / Wie erkannt?</label>
+                <textarea id="kbSymptoms" placeholder="Woran habt ihr es gemerkt? Welche Messwerte, Beobachtungen?"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="kbActions">Maßnahmen</label>
+                <textarea id="kbActions" placeholder="Was habt ihr konkret gemacht?"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="kbResult">Ergebnis</label>
+                <textarea id="kbResult" placeholder="Wie ist es ausgegangen?"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="kbRecovery">Erholungszeit (optional)</label>
+                <input type="text" id="kbRecovery" placeholder="z. B. 2 Tage bis klar" />
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn">Speichern</button>
+                <button type="button" class="btn btn-secondary" onclick="toggleKbForm(true)">Abbrechen</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="kbList"></div>
+          <div id="kbEmpty" class="empty-hint">Noch keine Situationen erfasst.</div>
         </div>
       </div>
     </section>
@@ -500,9 +876,37 @@ const LOGO_PDF_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAAELCAYA
 const APP_PASSWORD = "GitGuva#2026";
 const AUTH_KEY = "wv_authenticated";
 const POOL_KEY = "wv_pool_data";
+const POOL_DOSING_KEY = "wv_pool_dosing";
+const POOL_MULTITAB_KEY = "wv_pool_multitab";
+const POOL_FILTER_KEY = "wv_pool_filter";
+const POOL_NOTES_KEY = "wv_pool_notes";
+const POOL_KB_KEY = "wv_pool_knowledge";
+const POOL_FACTS_KEY = "wv_pool_facts";
 const STROM_KEY = "wv_strom_data";
 const WASSER_KEY = "wv_wasser_data";
 const RECHNUNG_KEY = "wv_rechnung_data";
+
+/* Standort für Wetterdaten – bei Bedarf anpassen */
+const WEATHER_LOCATION = { latitude: 47.6844, longitude: 9.8351, name: "Wangen im Allgäu" };
+
+/* Ampel-Grenzwerte für Poolwerte */
+const POOL_THRESHOLDS = {
+  ph:   { green: [7.0, 7.4], yellow: [6.8, 7.6], unit: '', label: 'pH-Wert', decimals: 2 },
+  fcl:  { green: [1.0, 2.0], yellow: [0.5, 3.0], unit: 'ppm', label: 'fCL', decimals: 2 },
+  temp: { green: [24, 28],   yellow: [20, 32],   unit: '°C', label: 'Temperatur', decimals: 1 },
+  alk:  { green: [80, 120],  yellow: [60, 150],  unit: 'mg/L', label: 'Alkalinität', decimals: 0 },
+};
+
+/* Multitab-Standardlaufzeit-Schätzung als Fallback */
+const MULTITAB_TYPICAL_DAYS = 10; // pro Tab
+
+/* Standard-Wissenseinträge (werden beim ersten Login angelegt, falls DB leer) */
+const KB_STARTER = [
+  { title: "Starkregen", cause: "Regen mehr als 20 mm in kurzer Zeit", symptoms: "pH- und Alkalinitäts-Werte verändern sich, Wasser evtl. trüb", actions: "Filter prüfen und ggf. rückspülen. Werte messen. Bei niedrigem FCL Chlorschock erwägen.", result: "", recovery: "1–2 Tage bis zur Klärung" },
+  { title: "Viele Badegäste (>8 Personen)", cause: "Erhöhter Chlorverbrauch durch Sonnencreme, Schweiß, organische Stoffe", symptoms: "FCL fällt schnell ab, evtl. Trübung, Geruch", actions: "Nach dem Baden Rückspülung, FCL-Wert prüfen, ggf. Chlorschock am Abend", result: "", recovery: "12–24 Stunden" },
+  { title: "PoolLab zeigt 'UR' (underrange)", cause: "Messwert unter dem messbaren Bereich – meist FCL zu niedrig oder Reagenz zu alt", symptoms: "PoolLab-Display zeigt 'UR' statt einer Zahl", actions: "1) Reagenzien-Haltbarkeit prüfen. 2) Frische Probe nehmen. 3) Wenn immer noch UR: Chlorwert wirklich sehr niedrig – nachdosieren.", result: "", recovery: "Nach Nachdosierung 2–4 h abwarten" },
+  { title: "Hitzeperiode (>30 °C)", cause: "Hohe Sonneneinstrahlung", symptoms: "Chlor verbraucht sich durch UV-Licht schneller, FCL fällt rasch", actions: "Häufiger messen (täglich), ggf. Multitab-Nachschub früher, Cyanursäure (Stabilisator) prüfen", result: "", recovery: "Solange die Hitze anhält" },
+];
 
 /* =========================================================
    LOGIN
@@ -526,15 +930,34 @@ function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   const today = new Date().toISOString().split('T')[0];
-  document.getElementById('pDate').value = today;
-  document.getElementById('sDate').value = today;
-  document.getElementById('wDate').value = today;
-  document.getElementById('rDate').value = today;
+  ['pDate','sDate','wDate','rDate','doDate','mtDate','fiDate','noDate'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+  initializeKbIfEmpty();
+  loadFacts();
   renderPool();
   renderStrom();
   renderWasser();
   renderRechnung();
+  renderDashboard();
+  renderTimeline();
+  renderKb();
+  fetchWeather();
 }
+
+/* Sub-Tab-Navigation innerhalb Pool */
+document.querySelectorAll('.subtab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.subtab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.subtab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sub-' + btn.dataset.subtab).classList.add('active');
+    if (btn.dataset.subtab === 'dashboard') { renderDashboard(); fetchWeather(); }
+    if (btn.dataset.subtab === 'historie') { renderTimeline(); }
+    if (btn.dataset.subtab === 'wissen') { renderKb(); }
+  });
+});
 
 function logout() {
   sessionStorage.removeItem(AUTH_KEY);
@@ -590,6 +1013,8 @@ document.getElementById('poolForm').addEventListener('submit', (e) => {
   e.target.reset();
   document.getElementById('pDate').value = new Date().toISOString().split('T')[0];
   renderPool();
+  renderDashboard();
+  renderTimeline();
 });
 
 function deletePool(idx) {
@@ -598,6 +1023,8 @@ function deletePool(idx) {
   data.splice(idx, 1);
   save(POOL_KEY, data);
   renderPool();
+  renderDashboard();
+  renderTimeline();
 }
 
 let chartPhFcl, chartTempAlk;
@@ -1343,16 +1770,468 @@ async function exportRechnungPdf() {
 }
 
 /* =========================================================
+   POOL – FORMULARE FÜR ZUGABE / MULTITAB / FILTER / BEMERKUNG
+   ========================================================= */
+function attachEventForm(formId, storageKey, fieldsMap) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const entry = {};
+    for (const [key, elId] of Object.entries(fieldsMap)) {
+      const el = document.getElementById(elId);
+      entry[key] = el.type === 'number' ? parseFloat(el.value) : el.value;
+    }
+    const data = load(storageKey);
+    data.push(entry);
+    data.sort((a, b) => a.date.localeCompare(b.date));
+    save(storageKey, data);
+    e.target.reset();
+    // Datumsfeld wieder mit heute befüllen
+    const dateEl = document.getElementById(fieldsMap.date);
+    if (dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+    renderDashboard();
+    renderTimeline();
+  });
+}
+
+attachEventForm('dosingForm', POOL_DOSING_KEY, {
+  date: 'doDate', product: 'doProduct', amount: 'doAmount', reason: 'doReason'
+});
+attachEventForm('multitabForm', POOL_MULTITAB_KEY, {
+  date: 'mtDate', count: 'mtCount', note: 'mtNote'
+});
+attachEventForm('filterForm', POOL_FILTER_KEY, {
+  date: 'fiDate', type: 'fiType', note: 'fiNote'
+});
+attachEventForm('noteForm', POOL_NOTES_KEY, {
+  date: 'noDate', text: 'noText'
+});
+
+/* =========================================================
+   POOL – DASHBOARD (Ampel, Trends, Multitab-Prognose)
+   ========================================================= */
+function ampelClass(key, value) {
+  const t = POOL_THRESHOLDS[key];
+  if (!t || value === null || isNaN(value)) return 'yellow';
+  if (value >= t.green[0] && value <= t.green[1]) return 'green';
+  if (value >= t.yellow[0] && value <= t.yellow[1]) return 'yellow';
+  return 'red';
+}
+
+function overallStatus(colors) {
+  if (colors.includes('red')) return 'red';
+  if (colors.includes('yellow')) return 'yellow';
+  return 'green';
+}
+
+let miniChartInstances = {};
+function renderDashboard() {
+  const data = load(POOL_KEY).slice().sort((a,b) => a.date.localeCompare(b.date));
+  const card = document.getElementById('poolStatusCard');
+  const emoji = document.getElementById('statusEmoji');
+  const title = document.getElementById('statusTitle');
+  const subtitle = document.getElementById('statusSubtitle');
+  const valuesDiv = document.getElementById('statusValues');
+  const recDiv = document.getElementById('statusRecommendation');
+  card.classList.remove('green', 'yellow', 'red');
+
+  if (data.length === 0) {
+    emoji.textContent = '⚪';
+    title.textContent = 'Noch keine Messungen';
+    subtitle.textContent = '';
+    valuesDiv.innerHTML = '';
+    recDiv.textContent = 'Erfasse deine erste Messung, um den Pool-Status zu sehen.';
+    document.getElementById('miniChartsEmpty').style.display = 'block';
+    document.getElementById('miniCharts').style.display = 'none';
+    renderMultitabPanel();
+    return;
+  }
+
+  const latest = data[data.length - 1];
+  const values = [
+    { key: 'ph', value: latest.ph },
+    { key: 'fcl', value: latest.fcl },
+    { key: 'temp', value: latest.temp },
+    { key: 'alk', value: latest.alk },
+  ];
+  const colors = values.map(v => ampelClass(v.key, v.value));
+  const overall = overallStatus(colors);
+  card.classList.add(overall);
+
+  const statusMap = {
+    green: { emoji: '🟢', title: 'Pool bereit', rec: 'Alle Werte im grünen Bereich. Einfach baden gehen.' },
+    yellow: { emoji: '🟡', title: 'Beobachtung nötig', rec: 'Einzelne Werte außerhalb des Idealbereichs. Prüfen und ggf. nachjustieren.' },
+    red: { emoji: '🔴', title: 'Handlungsbedarf', rec: 'Mindestens ein Wert kritisch. Vor dem Baden Werte korrigieren.' },
+  };
+  emoji.textContent = statusMap[overall].emoji;
+  title.textContent = statusMap[overall].title;
+  subtitle.textContent = 'Zuletzt gemessen: ' + fmtDate(latest.date);
+
+  valuesDiv.innerHTML = values.map((v, i) => {
+    const t = POOL_THRESHOLDS[v.key];
+    const val = v.value.toFixed(t.decimals);
+    const target = `Ideal ${t.green[0]}–${t.green[1]}${t.unit ? ' ' + t.unit : ''}`;
+    return `
+      <div class="status-value ${colors[i]}">
+        <div class="sv-label">${t.label}</div>
+        <div class="sv-num">${val} <span style="font-size:0.85rem;color:var(--muted);font-weight:400;">${t.unit}</span></div>
+        <div class="sv-target">${target}</div>
+      </div>`;
+  }).join('');
+
+  // Empfehlungen basierend auf spezifischen Abweichungen
+  const rec = [];
+  values.forEach((v, i) => {
+    const t = POOL_THRESHOLDS[v.key];
+    if (colors[i] === 'red' || colors[i] === 'yellow') {
+      if (v.value < t.green[0]) rec.push(`${t.label} zu niedrig (${v.value.toFixed(t.decimals)}${t.unit ? ' ' + t.unit : ''}) – anheben.`);
+      else if (v.value > t.green[1]) rec.push(`${t.label} zu hoch (${v.value.toFixed(t.decimals)}${t.unit ? ' ' + t.unit : ''}) – senken.`);
+    }
+  });
+  recDiv.textContent = rec.length ? rec.join(' ') : statusMap[overall].rec;
+
+  // Mini-Trends (letzte 20 Messungen)
+  const recent = data.slice(-20);
+  if (recent.length >= 2) {
+    document.getElementById('miniChartsEmpty').style.display = 'none';
+    document.getElementById('miniCharts').style.display = 'grid';
+    const labels = recent.map(e => fmtDate(e.date));
+    const miniOpts = {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { display: false }, y: { ticks: { font: { size: 9 } } } }
+    };
+    ['ph','fcl','alk'].forEach(key => {
+      const cId = 'miniChart' + key.charAt(0).toUpperCase() + key.slice(1);
+      if (miniChartInstances[key]) miniChartInstances[key].destroy();
+      miniChartInstances[key] = new Chart(document.getElementById(cId), {
+        type: 'line',
+        data: { labels, datasets: [{ data: recent.map(e => e[key]), borderColor: '#1f4a30', backgroundColor: 'rgba(31,74,48,0.15)', tension: 0.3, fill: true, pointRadius: 2 }] },
+        options: miniOpts
+      });
+    });
+  } else {
+    document.getElementById('miniChartsEmpty').style.display = 'block';
+    document.getElementById('miniCharts').style.display = 'none';
+  }
+
+  renderMultitabPanel();
+}
+
+function renderMultitabPanel() {
+  const div = document.getElementById('multitabContent');
+  const events = load(POOL_MULTITAB_KEY).slice().sort((a,b) => a.date.localeCompare(b.date));
+  if (events.length === 0) {
+    div.innerHTML = '<div class="empty-hint">Keine Multitab-Zeitpunkte erfasst.<br><small>Erfasse unter „Erfassen → Multitab neu eingelegt"</small></div>';
+    return;
+  }
+  const last = events[events.length - 1];
+  const daysSince = Math.floor((new Date() - new Date(last.date)) / 86400000);
+  const tabs = parseInt(last.count) || 1;
+  // Schätzung: pro Tab ca. MULTITAB_TYPICAL_DAYS – kann durch FCL-Verlauf verfeinert werden
+  const measurements = load(POOL_KEY).filter(m => m.date >= last.date).sort((a,b) => a.date.localeCompare(b.date));
+  let estimatedTotal = tabs * MULTITAB_TYPICAL_DAYS;
+
+  // Wenn wir FCL-Daten haben, lineare Regression zur Vorhersage
+  if (measurements.length >= 2) {
+    const first = measurements[0];
+    const latest = measurements[measurements.length - 1];
+    const daysSpan = Math.max(1, (new Date(latest.date) - new Date(first.date)) / 86400000);
+    const fclDrop = first.fcl - latest.fcl;
+    if (fclDrop > 0.05) {
+      const dropPerDay = fclDrop / daysSpan;
+      const daysUntilCritical = Math.max(0, (latest.fcl - 1.0) / dropPerDay);
+      estimatedTotal = Math.round(daysSince + daysUntilCritical);
+    }
+  }
+
+  const remaining = Math.max(0, estimatedTotal - daysSince);
+  div.innerHTML = `
+    <div class="multitab-status">
+      <div class="multitab-days">${remaining} <span style="font-size:1rem;color:var(--muted);font-weight:400;">Tage</span></div>
+      <div class="multitab-info">geschätzte Restlaufzeit</div>
+      <div class="multitab-info" style="margin-top:0.5rem;">
+        Zuletzt eingelegt: ${fmtDate(last.date)} (${daysSince} Tage her)<br>
+        ${tabs} Tab${tabs>1?'s':''} · Schätzung ${estimatedTotal} Tage gesamt
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================
+   WETTER (Open-Meteo, kostenlos ohne Anmeldung)
+   ========================================================= */
+async function fetchWeather() {
+  const div = document.getElementById('weatherContent');
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LOCATION.latitude}&longitude=${WEATHER_LOCATION.longitude}&current=temperature_2m,weather_code,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FBerlin&forecast_days=5`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Wetter-API nicht erreichbar');
+    const data = await res.json();
+    const wc = weatherCode(data.current.weather_code);
+    const daily = data.daily;
+    let forecastHtml = '';
+    for (let i = 0; i < Math.min(5, daily.time.length); i++) {
+      const d = new Date(daily.time[i]);
+      const label = i === 0 ? 'Heute' : d.toLocaleDateString('de-DE', { weekday: 'short' });
+      const wcd = weatherCode(daily.weather_code[i]);
+      forecastHtml += `
+        <div class="weather-day">
+          <div class="weather-day-label">${label}</div>
+          <div class="weather-day-icon">${wcd.icon}</div>
+          <div class="weather-day-temp">${Math.round(daily.temperature_2m_max[i])}° / ${Math.round(daily.temperature_2m_min[i])}°</div>
+          <div class="weather-day-rain">${daily.precipitation_sum[i] > 0 ? '💧 ' + daily.precipitation_sum[i].toFixed(1) + ' mm' : '—'}</div>
+        </div>`;
+    }
+    div.innerHTML = `
+      <div class="weather-current">
+        <div class="weather-icon">${wc.icon}</div>
+        <div>
+          <div class="weather-temp">${Math.round(data.current.temperature_2m)}°C</div>
+          <div class="weather-desc">${wc.desc} · ${data.current.precipitation > 0 ? data.current.precipitation.toFixed(1) + ' mm Regen' : 'trocken'}</div>
+        </div>
+      </div>
+      <div class="weather-forecast">${forecastHtml}</div>
+    `;
+  } catch (err) {
+    div.innerHTML = `<div class="empty-hint">Wetterdaten konnten nicht geladen werden.<br><small>${err.message}</small></div>`;
+  }
+}
+
+function weatherCode(code) {
+  // Vereinfachte WMO-Codes → Emoji + Beschreibung
+  if (code === 0) return { icon: '☀️', desc: 'Klar' };
+  if (code <= 2) return { icon: '🌤️', desc: 'Teils bewölkt' };
+  if (code === 3) return { icon: '☁️', desc: 'Bewölkt' };
+  if (code >= 45 && code <= 48) return { icon: '🌫️', desc: 'Nebel' };
+  if (code >= 51 && code <= 57) return { icon: '🌦️', desc: 'Nieselregen' };
+  if (code >= 61 && code <= 67) return { icon: '🌧️', desc: 'Regen' };
+  if (code >= 71 && code <= 77) return { icon: '❄️', desc: 'Schnee' };
+  if (code >= 80 && code <= 82) return { icon: '🌧️', desc: 'Regenschauer' };
+  if (code >= 85 && code <= 86) return { icon: '🌨️', desc: 'Schneeschauer' };
+  if (code >= 95) return { icon: '⛈️', desc: 'Gewitter' };
+  return { icon: '🌡️', desc: 'Unbekannt' };
+}
+
+/* =========================================================
+   POOL – HISTORIE / ZEITLEISTE
+   ========================================================= */
+let timelineFilter = 'all';
+document.querySelectorAll('#timelineFilter .filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('#timelineFilter .filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    timelineFilter = chip.dataset.filter;
+    renderTimeline();
+  });
+});
+
+function renderTimeline() {
+  const events = [];
+  load(POOL_KEY).forEach((e, i) => events.push({
+    date: e.date, type: 'measurement', idx: i, key: POOL_KEY,
+    title: '💧 Messung',
+    detail: `pH ${e.ph.toFixed(2)} · fCL ${e.fcl.toFixed(2)} ppm · ${e.temp.toFixed(1)}°C · Alk ${e.alk.toFixed(0)} mg/L`
+  }));
+  load(POOL_DOSING_KEY).forEach((e, i) => events.push({
+    date: e.date, type: 'dosing', idx: i, key: POOL_DOSING_KEY,
+    title: '🧪 Zugabe: ' + e.product,
+    detail: e.amount + (e.reason ? ' – ' + e.reason : '')
+  }));
+  load(POOL_MULTITAB_KEY).forEach((e, i) => events.push({
+    date: e.date, type: 'multitab', idx: i, key: POOL_MULTITAB_KEY,
+    title: '💊 Multitab eingelegt',
+    detail: `${e.count} Tab${e.count > 1 ? 's' : ''}` + (e.note ? ' – ' + e.note : '')
+  }));
+  load(POOL_FILTER_KEY).forEach((e, i) => events.push({
+    date: e.date, type: 'filter', idx: i, key: POOL_FILTER_KEY,
+    title: '🔧 ' + e.type,
+    detail: e.note || ''
+  }));
+  load(POOL_NOTES_KEY).forEach((e, i) => events.push({
+    date: e.date, type: 'note', idx: i, key: POOL_NOTES_KEY,
+    title: '📝 Bemerkung',
+    detail: e.text
+  }));
+  events.sort((a, b) => b.date.localeCompare(a.date));
+  const filtered = timelineFilter === 'all' ? events : events.filter(e => e.type === timelineFilter);
+  const list = document.getElementById('timelineList');
+  const empty = document.getElementById('timelineEmpty');
+  if (filtered.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = filtered.map(e => `
+    <div class="timeline-item type-${e.type}">
+      <div class="timeline-date">${fmtDate(e.date)}</div>
+      <div class="timeline-content">
+        <div class="timeline-title">${e.title}</div>
+        <div class="timeline-detail">${e.detail}</div>
+      </div>
+      <button class="timeline-delete" onclick="deleteTimelineItem('${e.key}', ${e.idx})" title="Löschen">✕</button>
+    </div>
+  `).join('');
+}
+
+function deleteTimelineItem(key, idx) {
+  if (!confirm("Diesen Eintrag wirklich löschen?")) return;
+  const data = load(key);
+  data.splice(idx, 1);
+  save(key, data);
+  renderTimeline();
+  renderDashboard();
+  if (key === POOL_KEY) renderPool();
+}
+
+/* =========================================================
+   POOL – WISSENSDATENBANK
+   ========================================================= */
+function initializeKbIfEmpty() {
+  if (load(POOL_KB_KEY).length === 0 && !localStorage.getItem('wv_kb_seeded')) {
+    const seeded = KB_STARTER.map(k => ({ ...k, id: Date.now() + Math.random() }));
+    save(POOL_KB_KEY, seeded);
+    localStorage.setItem('wv_kb_seeded', '1');
+  }
+}
+
+function toggleKbForm(reset) {
+  const wrap = document.getElementById('kbFormWrap');
+  if (reset) {
+    document.getElementById('kbForm').reset();
+    document.getElementById('kbId').value = '';
+    wrap.style.display = 'none';
+  } else {
+    wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+document.getElementById('kbForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const data = load(POOL_KB_KEY);
+  const id = document.getElementById('kbId').value;
+  const entry = {
+    id: id || (Date.now() + Math.random()),
+    title: document.getElementById('kbTitle').value,
+    cause: document.getElementById('kbCause').value,
+    symptoms: document.getElementById('kbSymptoms').value,
+    actions: document.getElementById('kbActions').value,
+    result: document.getElementById('kbResult').value,
+    recovery: document.getElementById('kbRecovery').value,
+  };
+  if (id) {
+    const i = data.findIndex(x => String(x.id) === String(id));
+    if (i >= 0) data[i] = entry;
+  } else {
+    data.push(entry);
+  }
+  save(POOL_KB_KEY, data);
+  toggleKbForm(true);
+  renderKb();
+});
+
+function editKb(id) {
+  const entry = load(POOL_KB_KEY).find(x => String(x.id) === String(id));
+  if (!entry) return;
+  document.getElementById('kbId').value = entry.id;
+  document.getElementById('kbTitle').value = entry.title || '';
+  document.getElementById('kbCause').value = entry.cause || '';
+  document.getElementById('kbSymptoms').value = entry.symptoms || '';
+  document.getElementById('kbActions').value = entry.actions || '';
+  document.getElementById('kbResult').value = entry.result || '';
+  document.getElementById('kbRecovery').value = entry.recovery || '';
+  document.getElementById('kbFormWrap').style.display = 'block';
+  document.getElementById('kbFormWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function deleteKb(id) {
+  if (!confirm("Diesen Wissenseintrag wirklich löschen?")) return;
+  const data = load(POOL_KB_KEY).filter(x => String(x.id) !== String(id));
+  save(POOL_KB_KEY, data);
+  renderKb();
+}
+
+function toggleKbItem(id) {
+  document.querySelector(`.kb-item[data-id="${id}"]`).classList.toggle('open');
+}
+
+function renderKb() {
+  const data = load(POOL_KB_KEY);
+  const list = document.getElementById('kbList');
+  const empty = document.getElementById('kbEmpty');
+  if (data.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  const field = (label, value) => value ? `
+    <div class="kb-field">
+      <div class="kb-field-label">${label}</div>
+      <div class="kb-field-value">${escapeHtml(value)}</div>
+    </div>` : '';
+  list.innerHTML = data.map(k => `
+    <div class="kb-item" data-id="${k.id}">
+      <div class="kb-header" onclick="toggleKbItem('${k.id}')">
+        <div class="kb-title">${escapeHtml(k.title)}</div>
+        <div class="kb-toggle">+</div>
+      </div>
+      <div class="kb-body">
+        ${field('Ursache / Auslöser', k.cause)}
+        ${field('Symptome / Erkannt', k.symptoms)}
+        ${field('Maßnahmen', k.actions)}
+        ${field('Ergebnis', k.result)}
+        ${field('Erholungszeit', k.recovery)}
+        <div class="kb-actions">
+          <button class="kb-btn-small" onclick="editKb('${k.id}')">✏️ Bearbeiten</button>
+          <button class="kb-btn-small danger" onclick="deleteKb('${k.id}')">🗑️ Löschen</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* Pool-Fakten (Freitext) */
+const DEFAULT_FACTS = `• Unser Pool fasst 15,5 m³.
+• 100 g pH-Plus erhöhen den pH typischerweise um etwa 0,15–0,2.
+• Nach Starkregen immer zuerst den Filter prüfen.
+• Die Multitab spätestens wechseln, wenn der FCL-Wert unter etwa 1 ppm fällt.
+• Nicht auf Verdacht dosieren. Erst messen. Dann handeln.`;
+
+function loadFacts() {
+  const stored = localStorage.getItem(POOL_FACTS_KEY);
+  document.getElementById('factsText').value = stored !== null ? stored : DEFAULT_FACTS;
+}
+
+document.getElementById('factsForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  localStorage.setItem(POOL_FACTS_KEY, document.getElementById('factsText').value);
+  alert("Fakten gespeichert.");
+});
+
+/* =========================================================
    JSON BACKUP / IMPORT
    ========================================================= */
 function exportBackup() {
   const backup = {
     exportedAt: new Date().toISOString(),
-    version: 2,
+    version: 3,
     pool: load(POOL_KEY),
     strom: load(STROM_KEY),
     wasser: load(WASSER_KEY),
     rechnung: load(RECHNUNG_KEY),
+    dosing: load(POOL_DOSING_KEY),
+    multitab: load(POOL_MULTITAB_KEY),
+    filter: load(POOL_FILTER_KEY),
+    notes: load(POOL_NOTES_KEY),
+    knowledge: load(POOL_KB_KEY),
+    facts: localStorage.getItem(POOL_FACTS_KEY) || '',
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1375,29 +2254,56 @@ function importBackup(event) {
       if (!backup.pool || !backup.strom) throw new Error("Ungültiges Format");
       const wasser = backup.wasser || [];
       const rechnung = backup.rechnung || [];
+      const dosing = backup.dosing || [];
+      const multitab = backup.multitab || [];
+      const filter = backup.filter || [];
+      const notes = backup.notes || [];
+      const knowledge = backup.knowledge || [];
+      const facts = backup.facts || '';
       const mode = confirm(
         `Sicherung vom ${new Date(backup.exportedAt).toLocaleString('de-DE')}\n\n` +
         `Enthält:\n• ${backup.pool.length} Poolmessungen\n• ${backup.strom.length} Stromzählerstände\n` +
-        `• ${wasser.length} Wasserzählerstände\n• ${rechnung.length} Wasserrechnungen\n\n` +
+        `• ${wasser.length} Wasserzählerstände\n• ${rechnung.length} Wasserrechnungen\n` +
+        `• ${dosing.length} Zugaben · ${multitab.length} Multitab-Events · ${filter.length} Filter-Events · ${notes.length} Bemerkungen\n` +
+        `• ${knowledge.length} Wissenseinträge\n\n` +
         `OK  = Ersetzen (bestehende Daten überschreiben)\n` +
         `Abbrechen = Zusammenführen (an bestehende Daten anhängen)`
       );
+      const uniq = (arr) => Array.from(new Map(arr.map(e => [JSON.stringify(e), e])).values());
       if (mode) {
         save(POOL_KEY, backup.pool);
         save(STROM_KEY, backup.strom);
         save(WASSER_KEY, wasser);
         save(RECHNUNG_KEY, rechnung);
+        save(POOL_DOSING_KEY, dosing);
+        save(POOL_MULTITAB_KEY, multitab);
+        save(POOL_FILTER_KEY, filter);
+        save(POOL_NOTES_KEY, notes);
+        save(POOL_KB_KEY, knowledge);
+        if (facts) localStorage.setItem(POOL_FACTS_KEY, facts);
       } else {
-        const uniq = (arr) => Array.from(new Map(arr.map(e => [JSON.stringify(e), e])).values());
         save(POOL_KEY, uniq(load(POOL_KEY).concat(backup.pool)).sort((a,b) => a.date.localeCompare(b.date)));
         save(STROM_KEY, uniq(load(STROM_KEY).concat(backup.strom)).sort((a,b) => a.date.localeCompare(b.date)));
         save(WASSER_KEY, uniq(load(WASSER_KEY).concat(wasser)).sort((a,b) => a.date.localeCompare(b.date)));
         save(RECHNUNG_KEY, uniq(load(RECHNUNG_KEY).concat(rechnung)).sort((a,b) => a.date.localeCompare(b.date)));
+        save(POOL_DOSING_KEY, uniq(load(POOL_DOSING_KEY).concat(dosing)).sort((a,b) => a.date.localeCompare(b.date)));
+        save(POOL_MULTITAB_KEY, uniq(load(POOL_MULTITAB_KEY).concat(multitab)).sort((a,b) => a.date.localeCompare(b.date)));
+        save(POOL_FILTER_KEY, uniq(load(POOL_FILTER_KEY).concat(filter)).sort((a,b) => a.date.localeCompare(b.date)));
+        save(POOL_NOTES_KEY, uniq(load(POOL_NOTES_KEY).concat(notes)).sort((a,b) => a.date.localeCompare(b.date)));
+        // Wissenseinträge: per ID zusammenführen
+        const existingKb = load(POOL_KB_KEY);
+        const kbMap = new Map(existingKb.map(k => [String(k.id), k]));
+        knowledge.forEach(k => kbMap.set(String(k.id), k));
+        save(POOL_KB_KEY, Array.from(kbMap.values()));
       }
       renderPool();
       renderStrom();
       renderWasser();
       renderRechnung();
+      renderDashboard();
+      renderTimeline();
+      renderKb();
+      loadFacts();
       alert("Sicherung erfolgreich geladen.");
     } catch (err) {
       alert("Fehler beim Laden der Sicherung: " + err.message);
