@@ -182,16 +182,53 @@
     .chart-wrap { position: relative; height: 320px; margin-bottom: 1rem; }
     .chart-controls {
       display: flex; justify-content: space-between; align-items: center;
-      font-size: 0.8rem; color: var(--muted); margin: -0.5rem 0 1rem 0;
-      flex-wrap: wrap; gap: 0.5rem;
+      margin: -0.5rem 0 1rem 0; flex-wrap: wrap; gap: 0.5rem;
     }
-    .chart-hint { font-style: italic; }
+    .chart-nav { display: flex; gap: 0.4rem; }
+    .chart-nav-btn {
+      background: var(--forest); color: white; border: none;
+      padding: 0.4rem 0.9rem; border-radius: 6px; cursor: pointer;
+      font-family: inherit; font-size: 1rem; font-weight: 700;
+      min-width: 44px;
+    }
+    .chart-nav-btn:hover { background: var(--forest-dark); }
     .chart-reset {
       background: transparent; border: 1px solid var(--border);
-      padding: 0.3rem 0.6rem; border-radius: 6px; cursor: pointer;
-      font-family: inherit; font-size: 0.8rem; color: var(--forest);
+      padding: 0.4rem 0.75rem; border-radius: 6px; cursor: pointer;
+      font-family: inherit; font-size: 0.85rem; color: var(--forest);
     }
     .chart-reset:hover { border-color: var(--forest); background: rgba(31,74,48,0.05); }
+
+    /* ===== INLINE-ERFASSUNGSZEILE in Tabellen ===== */
+    tr.input-row td {
+      background: rgba(31, 74, 48, 0.05);
+      border-bottom: 2px solid var(--forest);
+      padding: 0.5rem 0.6rem;
+      vertical-align: middle;
+    }
+    tr.input-row input,
+    tr.input-row select {
+      padding: 0.5rem 0.6rem;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: white;
+      width: 100%;
+      box-sizing: border-box;
+      font-family: inherit;
+      min-width: 0;
+    }
+    tr.input-row input[type="date"] {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .btn-add {
+      background: var(--forest); color: white; border: none;
+      border-radius: 6px; padding: 0.55rem 0.85rem; cursor: pointer;
+      font-size: 1.05rem; font-family: inherit; font-weight: 700;
+      line-height: 1; min-width: 44px;
+    }
+    .btn-add:hover { background: var(--forest-dark); }
     .empty-hint { color: var(--muted); text-align: center; padding: 2rem 1rem; font-style: italic; }
 
     /* ===== SUBTABS ===== */
@@ -605,7 +642,10 @@
           <div id="poolEmpty" class="empty-hint">Noch keine Messungen erfasst.</div>
           <div id="poolCharts" style="display:none;">
             <div class="chart-controls">
-              <span class="chart-hint">💡 Wischen zum Bewegen · Pinch/Mausrad zum Zoomen</span>
+              <div class="chart-nav">
+                <button type="button" class="chart-nav-btn" onclick="panCharts(-1, chartPhFcl, chartTempAlk)" title="Nach links">◀</button>
+                <button type="button" class="chart-nav-btn" onclick="panCharts(1, chartPhFcl, chartTempAlk)" title="Nach rechts">▶</button>
+              </div>
               <button type="button" class="chart-reset" onclick="resetChartZoom(chartPhFcl, chartTempAlk)">↻ Ansicht zurücksetzen</button>
             </div>
             <h3>pH-Wert & fCL</h3>
@@ -695,38 +735,35 @@
     <!-- ===== STROM TAB ===== -->
     <section class="tab-panel" id="tab-strom">
       <div class="card">
-        <h2>Zählerstände erfassen</h2>
-        <form id="stromForm">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="sDate">Datum</label>
-              <input type="date" id="sDate" required />
-            </div>
-            <div class="form-group">
-              <label for="sReading">Zählerstand (kWh)</label>
-              <input type="number" id="sReading" step="0.1" min="0" placeholder="z. B. 12345.6" required />
-            </div>
-            <div class="form-group">
-              <label for="sType">Ableseart</label>
-              <select id="sType" required>
-                <option value="kunde">👤 Kunden-Ablesung</option>
-                <option value="netzbetreiber">🏢 Netzbetreiber-Ablesung</option>
-                <option value="rechnerisch">📐 Rechnerisch ermittelt</option>
-                <option value="errechnet">🧮 Errechnet</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn">Speichern</button>
-            <button type="button" class="btn btn-secondary" onclick="exportStromPdf()">📄 PDF-Bericht exportieren</button>
-          </div>
-        </form>
+        <h2>Übersicht</h2>
+        <div class="stats-grid" id="stromStats"></div>
+      </div>
 
-        <hr style="border:0; border-top:1px solid var(--border); margin:1.5rem 0;">
+      <div class="card">
+        <h2>Monatsverbrauch</h2>
+        <div id="stromEmpty" class="empty-hint">Noch keine Zählerstände erfasst.</div>
+        <div id="stromCharts" style="display:none;">
+          <div class="chart-controls">
+            <div class="chart-nav">
+              <button type="button" class="chart-nav-btn" onclick="panCharts(-1, chartMonth, chartDailyByMonth)" title="Nach links">◀</button>
+              <button type="button" class="chart-nav-btn" onclick="panCharts(1, chartMonth, chartDailyByMonth)" title="Nach rechts">▶</button>
+            </div>
+            <button type="button" class="chart-reset" onclick="resetChartZoom(chartMonth, chartDailyByMonth)">↻ Ansicht zurücksetzen</button>
+          </div>
+          <h3>Verbrauch pro Monat (kWh)</h3>
+          <div class="chart-wrap"><canvas id="chartMonth"></canvas></div>
+          <h3>Ø Tagesverbrauch pro Monat (kWh/Tag)</h3>
+          <div class="chart-wrap"><canvas id="chartDailyByMonth"></canvas></div>
+        </div>
+      </div>
 
-        <h3 style="margin-bottom:0.75rem;">Erfasste Zählerstände</h3>
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+          <h2 style="margin:0;">Zählerstände erfassen</h2>
+          <button type="button" class="btn btn-secondary" onclick="exportStromPdf()" style="width:auto;">📄 PDF-Bericht</button>
+        </div>
         <div class="table-wrap">
-          <table id="stromTable">
+          <table>
             <thead>
               <tr>
                 <th>Datum</th>
@@ -736,81 +773,30 @@
                 <th></th>
               </tr>
             </thead>
-            <tbody></tbody>
+            <tbody>
+              <tr class="input-row">
+                <td><input type="date" id="sDate" /></td>
+                <td><input type="number" id="sReading" step="0.1" min="0" placeholder="z. B. 12345.6" onkeydown="if(event.key==='Enter'){event.preventDefault();addStromEntry();}" /></td>
+                <td>
+                  <select id="sType">
+                    <option value="kunde">👤 Kunden</option>
+                    <option value="netzbetreiber">🏢 Netzbetreiber</option>
+                    <option value="rechnerisch">📐 Rechnerisch ermittelt</option>
+                    <option value="errechnet">🧮 Errechnet</option>
+                  </select>
+                </td>
+                <td style="color:var(--muted);">—</td>
+                <td><button type="button" class="btn-add" onclick="addStromEntry()" title="Hinzufügen">➕</button></td>
+              </tr>
+            </tbody>
+            <tbody id="stromDataRows"></tbody>
           </table>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Übersicht</h2>
-        <div class="stats-grid" id="stromStats"></div>
-      </div>
-
-      <div class="card">
-        <h2>Monatsverbrauch</h2>
-        <div id="stromEmpty" class="empty-hint">Noch keine Zählerstände erfasst.</div>
-        <div id="stromCharts" style="display:none;">
-          <h3>Verbrauch pro Monat (kWh)</h3>
-          <div class="chart-wrap"><canvas id="chartMonth"></canvas></div>
-          <div class="chart-controls">
-            <span class="chart-hint">💡 Wischen zum Bewegen · Pinch/Mausrad zum Zoomen</span>
-            <button type="button" class="chart-reset" onclick="resetChartZoom(chartMonth, chartDailyByMonth)">↻ Ansicht zurücksetzen</button>
-          </div>
-          <h3>Ø Tagesverbrauch pro Monat (kWh/Tag)</h3>
-          <div class="chart-wrap"><canvas id="chartDailyByMonth"></canvas></div>
         </div>
       </div>
     </section>
 
     <!-- ===== WASSERBETRIEB TAB ===== -->
     <section class="tab-panel" id="tab-wasser">
-      <div class="card">
-        <h2>Zählerstände erfassen</h2>
-        <form id="wasserForm">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="wDate">Datum</label>
-              <input type="date" id="wDate" required />
-            </div>
-            <div class="form-group">
-              <label for="wReading">Zählerstand (m³)</label>
-              <input type="number" id="wReading" step="0.001" min="0" placeholder="z. B. 1234.567" required />
-            </div>
-            <div class="form-group">
-              <label for="wType">Ableseart</label>
-              <select id="wType" required>
-                <option value="kunde">👤 Kunden-Ablesung</option>
-                <option value="netzbetreiber">🏢 Netzbetreiber-Ablesung</option>
-                <option value="rechnerisch">📐 Rechnerisch ermittelt</option>
-                <option value="errechnet">🧮 Errechnet</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn">Speichern</button>
-            <button type="button" class="btn btn-secondary" onclick="exportWasserPdf()">📄 PDF-Bericht exportieren</button>
-          </div>
-        </form>
-
-        <hr style="border:0; border-top:1px solid var(--border); margin:1.5rem 0;">
-
-        <h3 style="margin-bottom:0.75rem;">Erfasste Zählerstände</h3>
-        <div class="table-wrap">
-          <table id="wasserTable">
-            <thead>
-              <tr>
-                <th>Datum</th>
-                <th>Zählerstand (m³)</th>
-                <th>Ableseart</th>
-                <th>Verbrauch seit letztem Eintrag</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
       <div class="card">
         <h2>Übersicht</h2>
         <div class="stats-grid" id="wasserStats"></div>
@@ -820,14 +806,54 @@
         <h2>Monatsverbrauch</h2>
         <div id="wasserEmpty" class="empty-hint">Noch keine Zählerstände erfasst.</div>
         <div id="wasserCharts" style="display:none;">
-          <h3>Verbrauch pro Monat (m³)</h3>
-          <div class="chart-wrap"><canvas id="chartWasserMonth"></canvas></div>
           <div class="chart-controls">
-            <span class="chart-hint">💡 Wischen zum Bewegen · Pinch/Mausrad zum Zoomen</span>
+            <div class="chart-nav">
+              <button type="button" class="chart-nav-btn" onclick="panCharts(-1, chartWasserMonth, chartWasserDaily)" title="Nach links">◀</button>
+              <button type="button" class="chart-nav-btn" onclick="panCharts(1, chartWasserMonth, chartWasserDaily)" title="Nach rechts">▶</button>
+            </div>
             <button type="button" class="chart-reset" onclick="resetChartZoom(chartWasserMonth, chartWasserDaily)">↻ Ansicht zurücksetzen</button>
           </div>
+          <h3>Verbrauch pro Monat (m³)</h3>
+          <div class="chart-wrap"><canvas id="chartWasserMonth"></canvas></div>
           <h3>Ø Tagesverbrauch pro Monat (m³/Tag)</h3>
           <div class="chart-wrap"><canvas id="chartWasserDaily"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+          <h2 style="margin:0;">Zählerstände erfassen</h2>
+          <button type="button" class="btn btn-secondary" onclick="exportWasserPdf()" style="width:auto;">📄 PDF-Bericht</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Zählerstand (m³)</th>
+                <th>Ableseart</th>
+                <th>Verbrauch seit letztem Eintrag</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="input-row">
+                <td><input type="date" id="wDate" /></td>
+                <td><input type="number" id="wReading" step="0.001" min="0" placeholder="z. B. 1234.567" onkeydown="if(event.key==='Enter'){event.preventDefault();addWasserEntry();}" /></td>
+                <td>
+                  <select id="wType">
+                    <option value="kunde">👤 Kunden</option>
+                    <option value="netzbetreiber">🏢 Netzbetreiber</option>
+                    <option value="rechnerisch">📐 Rechnerisch ermittelt</option>
+                    <option value="errechnet">🧮 Errechnet</option>
+                  </select>
+                </td>
+                <td style="color:var(--muted);">—</td>
+                <td><button type="button" class="btn-add" onclick="addWasserEntry()" title="Hinzufügen">➕</button></td>
+              </tr>
+            </tbody>
+            <tbody id="wasserDataRows"></tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -876,7 +902,10 @@
         <div id="rechnungEmpty" class="empty-hint">Noch keine Rechnungen erfasst.</div>
         <div id="rechnungCharts" style="display:none;">
           <div class="chart-controls">
-            <span class="chart-hint">💡 Wischen zum Bewegen · Pinch/Mausrad zum Zoomen</span>
+            <div class="chart-nav">
+              <button type="button" class="chart-nav-btn" onclick="panCharts(-1, chartRechnungVerbrauch, chartRechnungKosten, chartRechnungPreis)" title="Nach links">◀</button>
+              <button type="button" class="chart-nav-btn" onclick="panCharts(1, chartRechnungVerbrauch, chartRechnungKosten, chartRechnungPreis)" title="Nach rechts">▶</button>
+            </div>
             <button type="button" class="chart-reset" onclick="resetChartZoom(chartRechnungVerbrauch, chartRechnungKosten, chartRechnungPreis)">↻ Ansicht zurücksetzen</button>
           </div>
           <h3>Verbrauch pro Abrechnungszeitraum (m³)</h3>
@@ -948,11 +977,11 @@ const DEFAULT_READING_TYPE = 'kunde';
 /* Standort für Wetterdaten – bei Bedarf anpassen */
 const WEATHER_LOCATION = { latitude: 48.7625, longitude: 9.2310, name: "Stuttgart-Wangen" };
 
-/* Chart.js: Pan- und Zoom-Optionen (via chartjs-plugin-zoom) */
+/* Chart.js: Nur Zoom (kein Wisch-Pan), gescrollt wird über Buttons */
 function chartZoomPlugin() {
   return {
     zoom: {
-      pan: { enabled: true, mode: 'x', threshold: 5 },
+      pan: { enabled: false },
       zoom: {
         wheel: { enabled: true, speed: 0.1 },
         pinch: { enabled: true },
@@ -966,6 +995,16 @@ function chartZoomPlugin() {
 /* Setzt den Zoom von Diagrammen zurück */
 function resetChartZoom(...charts) {
   charts.forEach(c => { if (c && typeof c.resetZoom === 'function') c.resetZoom(); });
+}
+
+/* Verschiebt Diagramme nach links (-1) oder rechts (+1) */
+function panCharts(direction, ...charts) {
+  charts.forEach(c => {
+    if (c && typeof c.pan === 'function') {
+      // Positive x-Werte = View bewegt sich nach rechts = ältere Daten kommen ins Bild
+      c.pan({ x: direction * 80, y: 0 }, undefined, 'default');
+    }
+  });
 }
 
 /* Ampel-Grenzwerte für Poolwerte */
@@ -1178,22 +1217,28 @@ function renderPool() {
 /* =========================================================
    STROM
    ========================================================= */
-document.getElementById('stromForm').addEventListener('submit', (e) => {
-  e.preventDefault();
+function addStromEntry() {
+  const dateEl = document.getElementById('sDate');
+  const readingEl = document.getElementById('sReading');
+  const typeEl = document.getElementById('sType');
+  if (!dateEl.value) { alert("Bitte Datum eingeben."); return; }
+  if (!readingEl.value) { alert("Bitte Zählerstand eingeben."); readingEl.focus(); return; }
   const entry = {
-    date: document.getElementById('sDate').value,
-    reading: parseFloat(document.getElementById('sReading').value),
-    type: document.getElementById('sType').value,
+    date: dateEl.value,
+    reading: parseFloat(readingEl.value),
+    type: typeEl.value,
   };
   const data = load(STROM_KEY);
   data.push(entry);
   data.sort((a, b) => a.date.localeCompare(b.date));
   save(STROM_KEY, data);
-  e.target.reset();
-  document.getElementById('sDate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('sType').value = DEFAULT_READING_TYPE;
+  // Nur die Eingabewerte zurücksetzen — Zeile bleibt bestehen
+  readingEl.value = '';
+  dateEl.value = new Date().toISOString().split('T')[0];
+  typeEl.value = DEFAULT_READING_TYPE;
   renderStrom();
-});
+  readingEl.focus();
+}
 
 function deleteStrom(idx) {
   if (!confirm("Diesen Eintrag wirklich löschen?")) return;
@@ -1267,7 +1312,7 @@ function computeStromStats(data) {
 let chartMonth, chartDailyByMonth;
 function renderStrom() {
   const data = load(STROM_KEY);
-  const tbody = document.querySelector('#stromTable tbody');
+  const tbody = document.getElementById('stromDataRows');
   tbody.innerHTML = "";
   const sorted = data.slice().sort((a,b) => a.date.localeCompare(b.date));
   sorted.slice().reverse().forEach((e, revIdx) => {
@@ -1501,22 +1546,27 @@ async function exportStromPdf() {
 /* =========================================================
    WASSERBETRIEB (analog zu Strom)
    ========================================================= */
-document.getElementById('wasserForm').addEventListener('submit', (e) => {
-  e.preventDefault();
+function addWasserEntry() {
+  const dateEl = document.getElementById('wDate');
+  const readingEl = document.getElementById('wReading');
+  const typeEl = document.getElementById('wType');
+  if (!dateEl.value) { alert("Bitte Datum eingeben."); return; }
+  if (!readingEl.value) { alert("Bitte Zählerstand eingeben."); readingEl.focus(); return; }
   const entry = {
-    date: document.getElementById('wDate').value,
-    reading: parseFloat(document.getElementById('wReading').value),
-    type: document.getElementById('wType').value,
+    date: dateEl.value,
+    reading: parseFloat(readingEl.value),
+    type: typeEl.value,
   };
   const data = load(WASSER_KEY);
   data.push(entry);
   data.sort((a, b) => a.date.localeCompare(b.date));
   save(WASSER_KEY, data);
-  e.target.reset();
-  document.getElementById('wDate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('wType').value = DEFAULT_READING_TYPE;
+  readingEl.value = '';
+  dateEl.value = new Date().toISOString().split('T')[0];
+  typeEl.value = DEFAULT_READING_TYPE;
   renderWasser();
-});
+  readingEl.focus();
+}
 
 function deleteWasser(idx) {
   if (!confirm("Diesen Eintrag wirklich löschen?")) return;
@@ -1570,7 +1620,7 @@ function computeWasserStats(data) {
 let chartWasserMonth, chartWasserDaily;
 function renderWasser() {
   const data = load(WASSER_KEY);
-  const tbody = document.querySelector('#wasserTable tbody');
+  const tbody = document.getElementById('wasserDataRows');
   tbody.innerHTML = "";
   const sorted = data.slice().sort((a,b) => a.date.localeCompare(b.date));
   sorted.slice().reverse().forEach((e, revIdx) => {
