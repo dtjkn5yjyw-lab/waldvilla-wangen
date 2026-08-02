@@ -22,7 +22,10 @@
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; color: var(--text); background: var(--cream); }
-    h1, h2, h3 { font-family: 'Playfair Display', serif; margin: 0; }
+    h1, h2, h3 { font-family: inherit; margin: 0; font-weight: 700; }
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.3rem; color: var(--forest); }
+    h3 { font-size: 1.05rem; color: var(--forest-dark); font-weight: 600; }
 
     /* ===== LOGIN ===== */
     #loginScreen {
@@ -101,8 +104,8 @@
       background: var(--paper); border-radius: 12px; padding: 1.5rem;
       box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem;
     }
-    .card h2 { color: var(--forest); font-size: 1.4rem; margin-bottom: 1rem; }
-    .card h3 { font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--forest-dark); font-family: 'Inter', sans-serif; font-weight: 600; }
+    .card h2 { color: var(--forest); font-size: 1.35rem; margin-bottom: 1rem; font-weight: 700; }
+    .card h3 { font-size: 1.05rem; margin-bottom: 0.75rem; color: var(--forest-dark); font-weight: 600; }
 
     .form-grid {
       display: grid;
@@ -229,6 +232,25 @@
       line-height: 1; min-width: 44px;
     }
     .btn-add:hover { background: var(--forest-dark); }
+
+    /* ===== MODE-TOGGLE (Verbrauch/Kosten, Einspeisung/Erlös) ===== */
+    .card-header-row {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;
+    }
+    .card-header-row h2 { margin: 0; }
+    .mode-toggle {
+      display: inline-flex; background: var(--paper);
+      border: 1px solid var(--border); border-radius: 8px; padding: 0.25rem;
+    }
+    .mode-btn {
+      padding: 0.4rem 0.9rem; border: none; background: transparent;
+      border-radius: 6px; cursor: pointer; font-family: inherit;
+      font-size: 0.85rem; color: var(--muted); font-weight: 500;
+      transition: all 0.15s;
+    }
+    .mode-btn:hover { color: var(--forest); }
+    .mode-btn.active { background: var(--forest); color: white; font-weight: 600; }
     .empty-hint { color: var(--muted); text-align: center; padding: 2rem 1rem; font-style: italic; }
 
     /* ===== SUBTABS (vertikale Sidebar links im Pool-Tab) ===== */
@@ -754,7 +776,13 @@
     <!-- ===== STROM TAB ===== -->
     <section class="tab-panel" id="tab-strom">
       <div class="card">
-        <h2>Übersicht</h2>
+        <div class="card-header-row">
+          <h2>Übersicht</h2>
+          <div class="mode-toggle" id="stromModeToggle">
+            <button type="button" class="mode-btn active" data-mode="verbrauch">Verbrauch (kWh)</button>
+            <button type="button" class="mode-btn" data-mode="kosten">Kosten (€)</button>
+          </div>
+        </div>
         <div class="stats-grid" id="stromStats"></div>
       </div>
 
@@ -769,9 +797,9 @@
             </div>
             <button type="button" class="chart-reset" onclick="resetChartZoom(chartMonth, chartDailyByMonth)">↻ Ansicht zurücksetzen</button>
           </div>
-          <h3>Verbrauch pro Monat (kWh)</h3>
+          <h3 id="chartMonthTitle">Verbrauch pro Monat (kWh)</h3>
           <div class="chart-wrap"><canvas id="chartMonth"></canvas></div>
-          <h3>Ø Tagesverbrauch pro Monat (kWh/Tag)</h3>
+          <h3 id="chartDailyTitle">Ø Tagesverbrauch pro Monat (kWh/Tag)</h3>
           <div class="chart-wrap"><canvas id="chartDailyByMonth"></canvas></div>
         </div>
       </div>
@@ -788,6 +816,7 @@
                 <th>Datum</th>
                 <th>Zählerstand (kWh)</th>
                 <th>Ableseart</th>
+                <th>€/kWh</th>
                 <th>Verbrauch seit letztem Eintrag</th>
                 <th></th>
               </tr>
@@ -804,11 +833,61 @@
                     <option value="errechnet">🧮 Errechnet</option>
                   </select>
                 </td>
+                <td><input type="number" id="sPrice" step="0.01" min="0" placeholder="z. B. 0.32" onkeydown="if(event.key==='Enter'){event.preventDefault();addStromEntry();}" /></td>
                 <td style="color:var(--muted);">—</td>
                 <td><button type="button" class="btn-add" onclick="addStromEntry()" title="Hinzufügen">➕</button></td>
               </tr>
             </tbody>
             <tbody id="stromDataRows"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header-row">
+          <h2>☀️ PV-Einspeisung</h2>
+          <div class="mode-toggle" id="pvModeToggle">
+            <button type="button" class="mode-btn active" data-mode="einspeisung">Einspeisung (kWh)</button>
+            <button type="button" class="mode-btn" data-mode="erloes">Erlös (€)</button>
+          </div>
+        </div>
+        <div class="stats-grid" id="pvStats"></div>
+
+        <div id="pvEmpty" class="empty-hint" style="margin-top:1rem;">Noch keine Einspeisung erfasst.</div>
+        <div id="pvChartWrap" style="display:none;">
+          <div class="chart-controls">
+            <div class="chart-nav">
+              <button type="button" class="chart-nav-btn" onclick="panCharts(-1, chartPv)" title="Nach links">◀</button>
+              <button type="button" class="chart-nav-btn" onclick="panCharts(1, chartPv)" title="Nach rechts">▶</button>
+            </div>
+            <button type="button" class="chart-reset" onclick="resetChartZoom(chartPv)">↻ Ansicht zurücksetzen</button>
+          </div>
+          <h3 id="pvChartTitle">Einspeisung pro Monat (kWh)</h3>
+          <div class="chart-wrap"><canvas id="chartPv"></canvas></div>
+        </div>
+
+        <h3 style="margin-top:1.5rem;">Monatliche Einspeisung erfassen</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Monat</th>
+                <th>Einspeisung (kWh)</th>
+                <th>€/kWh (Vergütung)</th>
+                <th>Erlös (€)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="input-row">
+                <td><input type="month" id="pvDate" /></td>
+                <td><input type="number" id="pvAmount" step="0.1" min="0" placeholder="z. B. 145.5" onkeydown="if(event.key==='Enter'){event.preventDefault();addPvEntry();}" /></td>
+                <td><input type="number" id="pvTariff" step="0.01" min="0" placeholder="z. B. 0.08" onkeydown="if(event.key==='Enter'){event.preventDefault();addPvEntry();}" /></td>
+                <td style="color:var(--muted);">auto</td>
+                <td><button type="button" class="btn-add" onclick="addPvEntry()" title="Hinzufügen">➕</button></td>
+              </tr>
+            </tbody>
+            <tbody id="pvDataRows"></tbody>
           </table>
         </div>
       </div>
@@ -984,6 +1063,11 @@ const POOL_PRODUCTS_KEY = "wv_pool_products";
 const STROM_KEY = "wv_strom_data";
 const WASSER_KEY = "wv_wasser_data";
 const RECHNUNG_KEY = "wv_rechnung_data";
+const PV_KEY = "wv_pv_data";
+
+/* Aktuelle Ansicht (Verbrauch/Kosten bzw. Einspeisung/Erlös) */
+let stromMode = 'verbrauch'; // 'verbrauch' | 'kosten'
+let pvMode = 'einspeisung';  // 'einspeisung' | 'erloes'
 
 /* Standardprodukte für Zugabe/Dosierung */
 const STANDARD_PRODUCTS = ['pH-Plus', 'pH-Minus', 'Chlorgranulat', 'Algizid'];
@@ -1082,6 +1166,7 @@ function showApp() {
   renderStrom();
   renderWasser();
   renderRechnung();
+  renderPv();
   renderDashboard();
   renderTimeline();
   renderKb();
@@ -1268,12 +1353,15 @@ function addStromEntry() {
   const dateEl = document.getElementById('sDate');
   const readingEl = document.getElementById('sReading');
   const typeEl = document.getElementById('sType');
+  const priceEl = document.getElementById('sPrice');
   if (!dateEl.value) { alert("Bitte Datum eingeben."); return; }
   if (!readingEl.value) { alert("Bitte Zählerstand eingeben."); readingEl.focus(); return; }
+  const priceVal = priceEl.value.trim();
   const entry = {
     date: dateEl.value,
     reading: parseFloat(readingEl.value),
     type: typeEl.value,
+    price: priceVal ? parseFloat(priceVal) : null,
   };
   const data = load(STROM_KEY);
   data.push(entry);
@@ -1281,6 +1369,7 @@ function addStromEntry() {
   save(STROM_KEY, data);
   // Nur die Eingabewerte zurücksetzen — Zeile bleibt bestehen
   readingEl.value = '';
+  priceEl.value = '';
   dateEl.value = new Date().toISOString().split('T')[0];
   typeEl.value = DEFAULT_READING_TYPE;
   renderStrom();
@@ -1312,6 +1401,17 @@ function computeStromStats(data) {
     byMonth[k].push(e);
   });
 
+  const sortedAll = data.slice().sort((a,b) => a.date.localeCompare(b.date));
+  // Hilfsfunktion: letzten bekannten Preis zu oder vor dem gegebenen Datum finden
+  const priceAt = (date) => {
+    for (let i = sortedAll.length - 1; i >= 0; i--) {
+      if (sortedAll[i].date <= date && typeof sortedAll[i].price === 'number' && !isNaN(sortedAll[i].price)) {
+        return sortedAll[i].price;
+      }
+    }
+    return null;
+  };
+
   const monthKeys = Object.keys(byMonth).sort();
   const monthly = [];
   let prevLastReading = null;
@@ -1323,18 +1423,22 @@ function computeStromStats(data) {
     const last = entries[entries.length - 1];
     let usage, daysSpan;
     if (prevLastReading === null) {
-      // erster Monat: benutze innerhalb des Monats
       usage = last.reading - first.reading;
       daysSpan = Math.max(1, (new Date(last.date) - new Date(first.date)) / 86400000);
     } else {
       usage = last.reading - prevLastReading;
       daysSpan = Math.max(1, (new Date(last.date) - new Date(prevLastDate)) / 86400000);
     }
+    const price = priceAt(last.date);
+    const cost = price !== null ? usage * price : null;
     monthly.push({
       key: k,
       label: monthLabel(k + '-01'),
       usage: usage,
       dailyAvg: usage / daysSpan,
+      cost: cost,
+      dailyAvgCost: cost !== null ? cost / daysSpan : null,
+      price: price,
       daysSpan: daysSpan,
     });
     prevLastReading = last.reading;
@@ -1345,16 +1449,28 @@ function computeStromStats(data) {
   const yearly = {};
   monthly.forEach(m => {
     const yr = m.key.substring(0, 4);
-    if (!yearly[yr]) yearly[yr] = { usage: 0, days: 0 };
+    if (!yearly[yr]) yearly[yr] = { usage: 0, cost: 0, hasAnyCost: false, days: 0 };
     yearly[yr].usage += m.usage;
     yearly[yr].days += m.daysSpan;
+    if (m.cost !== null) { yearly[yr].cost += m.cost; yearly[yr].hasAnyCost = true; }
   });
   Object.keys(yearly).forEach(yr => {
     yearly[yr].dailyAvg = yearly[yr].usage / Math.max(1, yearly[yr].days);
+    yearly[yr].dailyAvgCost = yearly[yr].hasAnyCost ? yearly[yr].cost / Math.max(1, yearly[yr].days) : null;
   });
 
   return { monthly, yearly };
 }
+
+/* Mode-Toggle-Handler für Strom */
+document.querySelectorAll('#stromModeToggle .mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#stromModeToggle .mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    stromMode = btn.dataset.mode;
+    renderStrom();
+  });
+});
 
 let chartMonth, chartDailyByMonth;
 function renderStrom() {
@@ -1368,11 +1484,13 @@ function renderStrom() {
     const prev = sortedIdx > 0 ? sorted[sortedIdx - 1] : null;
     const diff = prev ? (e.reading - prev.reading).toFixed(1) + ' kWh' : '—';
     const typeLabel = READING_TYPES[e.type] || '—';
+    const priceLabel = (typeof e.price === 'number' && !isNaN(e.price)) ? e.price.toFixed(2) + ' €' : '—';
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${fmtDate(e.date)}</td>
       <td>${e.reading.toFixed(1)}</td>
       <td>${typeLabel}</td>
+      <td>${priceLabel}</td>
       <td>${diff}</td>
       <td><button class="delete-row" onclick="deleteStrom(${origIdx})" title="Löschen">✕</button></td>
     `;
@@ -1382,29 +1500,53 @@ function renderStrom() {
   const stats = computeStromStats(sorted);
   const statsDiv = document.getElementById('stromStats');
   statsDiv.innerHTML = "";
+  const isKosten = stromMode === 'kosten';
   if (stats.monthly.length > 0) {
     const currentMonth = stats.monthly[stats.monthly.length - 1];
     const currentYear = Object.keys(stats.yearly).sort().pop();
     const yr = stats.yearly[currentYear];
-    statsDiv.innerHTML = `
-      <div class="stat">
-        <div class="stat-label">Aktueller Monat</div>
-        <div class="stat-value">${currentMonth.usage.toFixed(1)} <span class="stat-unit">kWh</span></div>
-        <div class="stat-label" style="margin-top:0.5rem;">${currentMonth.label}</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Ø Tag (akt. Monat)</div>
-        <div class="stat-value">${currentMonth.dailyAvg.toFixed(2)} <span class="stat-unit">kWh</span></div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Jahresverbrauch ${currentYear}</div>
-        <div class="stat-value">${yr.usage.toFixed(1)} <span class="stat-unit">kWh</span></div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Ø Tag (${currentYear})</div>
-        <div class="stat-value">${yr.dailyAvg.toFixed(2)} <span class="stat-unit">kWh</span></div>
-      </div>
-    `;
+    const fmtEuro = v => (v === null || v === undefined) ? '—' : v.toFixed(2);
+    if (isKosten) {
+      statsDiv.innerHTML = `
+        <div class="stat">
+          <div class="stat-label">Kosten aktueller Monat</div>
+          <div class="stat-value">${fmtEuro(currentMonth.cost)} <span class="stat-unit">€</span></div>
+          <div class="stat-label" style="margin-top:0.5rem;">${currentMonth.label}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Ø € / Tag (akt. Monat)</div>
+          <div class="stat-value">${fmtEuro(currentMonth.dailyAvgCost)} <span class="stat-unit">€</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Jahreskosten ${currentYear}</div>
+          <div class="stat-value">${fmtEuro(yr.hasAnyCost ? yr.cost : null)} <span class="stat-unit">€</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Ø € / Tag (${currentYear})</div>
+          <div class="stat-value">${fmtEuro(yr.dailyAvgCost)} <span class="stat-unit">€</span></div>
+        </div>
+      `;
+    } else {
+      statsDiv.innerHTML = `
+        <div class="stat">
+          <div class="stat-label">Aktueller Monat</div>
+          <div class="stat-value">${currentMonth.usage.toFixed(1)} <span class="stat-unit">kWh</span></div>
+          <div class="stat-label" style="margin-top:0.5rem;">${currentMonth.label}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Ø Tag (akt. Monat)</div>
+          <div class="stat-value">${currentMonth.dailyAvg.toFixed(2)} <span class="stat-unit">kWh</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Jahresverbrauch ${currentYear}</div>
+          <div class="stat-value">${yr.usage.toFixed(1)} <span class="stat-unit">kWh</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Ø Tag (${currentYear})</div>
+          <div class="stat-value">${yr.dailyAvg.toFixed(2)} <span class="stat-unit">kWh</span></div>
+        </div>
+      `;
+    }
   }
 
   const empty = document.getElementById('stromEmpty');
@@ -1417,6 +1559,10 @@ function renderStrom() {
   empty.style.display = 'none';
   charts.style.display = 'block';
 
+  // Chart-Titel je nach Modus setzen
+  document.getElementById('chartMonthTitle').textContent = isKosten ? 'Kosten pro Monat (€)' : 'Verbrauch pro Monat (kWh)';
+  document.getElementById('chartDailyTitle').textContent = isKosten ? 'Ø Tageskosten pro Monat (€/Tag)' : 'Ø Tagesverbrauch pro Monat (kWh/Tag)';
+
   const labels = stats.monthly.map(m => m.label);
   if (chartMonth) chartMonth.destroy();
   chartMonth = new Chart(document.getElementById('chartMonth'), {
@@ -1424,15 +1570,15 @@ function renderStrom() {
     data: {
       labels,
       datasets: [{
-        label: 'Verbrauch (kWh)',
-        data: stats.monthly.map(m => m.usage.toFixed(1)),
-        backgroundColor: '#1f4a30',
+        label: isKosten ? 'Kosten (€)' : 'Verbrauch (kWh)',
+        data: stats.monthly.map(m => isKosten ? (m.cost !== null ? m.cost.toFixed(2) : null) : m.usage.toFixed(1)),
+        backgroundColor: isKosten ? '#a03030' : '#1f4a30',
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: chartZoomPlugin(),
-      scales: { y: { title: { display: true, text: 'kWh' } } }
+      scales: { y: { title: { display: true, text: isKosten ? '€' : 'kWh' } } }
     }
   });
 
@@ -1442,15 +1588,180 @@ function renderStrom() {
     data: {
       labels,
       datasets: [{
-        label: 'Ø kWh / Tag',
-        data: stats.monthly.map(m => m.dailyAvg.toFixed(2)),
-        backgroundColor: '#2d6a44',
+        label: isKosten ? 'Ø € / Tag' : 'Ø kWh / Tag',
+        data: stats.monthly.map(m => isKosten ? (m.dailyAvgCost !== null ? m.dailyAvgCost.toFixed(2) : null) : m.dailyAvg.toFixed(2)),
+        backgroundColor: isKosten ? '#c68b2d' : '#2d6a44',
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: chartZoomPlugin(),
-      scales: { y: { title: { display: true, text: 'kWh / Tag' } } }
+      scales: { y: { title: { display: true, text: isKosten ? '€ / Tag' : 'kWh / Tag' } } }
+    }
+  });
+}
+
+/* =========================================================
+   PV-EINSPEISUNG
+   ========================================================= */
+document.querySelectorAll('#pvModeToggle .mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#pvModeToggle .mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    pvMode = btn.dataset.mode;
+    renderPv();
+  });
+});
+
+function addPvEntry() {
+  const dateEl = document.getElementById('pvDate');
+  const amountEl = document.getElementById('pvAmount');
+  const tariffEl = document.getElementById('pvTariff');
+  if (!dateEl.value) { alert("Bitte Monat wählen."); return; }
+  if (!amountEl.value) { alert("Bitte Einspeisungsmenge eingeben."); amountEl.focus(); return; }
+  const tariffVal = tariffEl.value.trim();
+  const entry = {
+    date: dateEl.value,  // Format: YYYY-MM
+    amount: parseFloat(amountEl.value),
+    tariff: tariffVal ? parseFloat(tariffVal) : null,
+  };
+  const data = load(PV_KEY);
+  // Prüfen ob dieser Monat schon existiert – dann ersetzen
+  const existingIdx = data.findIndex(x => x.date === entry.date);
+  if (existingIdx >= 0) {
+    if (!confirm(`Für ${entry.date} existiert bereits ein Eintrag. Ersetzen?`)) return;
+    data[existingIdx] = entry;
+  } else {
+    data.push(entry);
+  }
+  data.sort((a, b) => a.date.localeCompare(b.date));
+  save(PV_KEY, data);
+  amountEl.value = '';
+  tariffEl.value = '';
+  // Datum nicht zurücksetzen – oft trägt man mehrere Monate hintereinander ein
+  renderPv();
+  amountEl.focus();
+}
+
+function deletePv(idx) {
+  if (!confirm("Diesen Eintrag wirklich löschen?")) return;
+  const data = load(PV_KEY);
+  data.splice(idx, 1);
+  save(PV_KEY, data);
+  renderPv();
+}
+
+let chartPv;
+function renderPv() {
+  const data = load(PV_KEY).slice().sort((a,b) => a.date.localeCompare(b.date));
+  const tbody = document.getElementById('pvDataRows');
+  tbody.innerHTML = "";
+
+  // Datum-Input beim ersten Aufruf mit aktuellem Monat vorbelegen
+  const dateEl = document.getElementById('pvDate');
+  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().substring(0, 7);
+
+  // Tabelle
+  data.slice().reverse().forEach((e) => {
+    const origIdx = data.indexOf(e);
+    const tariffLabel = (typeof e.tariff === 'number' && !isNaN(e.tariff)) ? e.tariff.toFixed(2) + ' €' : '—';
+    const erloes = (typeof e.tariff === 'number' && !isNaN(e.tariff)) ? (e.amount * e.tariff).toFixed(2) + ' €' : '—';
+    const monthLabel = new Date(e.date + '-01').toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${monthLabel}</td>
+      <td>${e.amount.toFixed(1)}</td>
+      <td>${tariffLabel}</td>
+      <td>${erloes}</td>
+      <td><button class="delete-row" onclick="deletePv(${origIdx})" title="Löschen">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Stats
+  const statsDiv = document.getElementById('pvStats');
+  statsDiv.innerHTML = '';
+  const isErloes = pvMode === 'erloes';
+  if (data.length > 0) {
+    const totalKwh = data.reduce((s, e) => s + e.amount, 0);
+    const withTariff = data.filter(e => typeof e.tariff === 'number' && !isNaN(e.tariff));
+    const totalErloes = withTariff.reduce((s, e) => s + e.amount * e.tariff, 0);
+    const currentYear = new Date().getFullYear();
+    const thisYear = data.filter(e => parseInt(e.date.substring(0,4)) === currentYear);
+    const yearKwh = thisYear.reduce((s, e) => s + e.amount, 0);
+    const yearErloes = thisYear.filter(e => typeof e.tariff === 'number').reduce((s, e) => s + e.amount * e.tariff, 0);
+    const latest = data[data.length - 1];
+    const latestVal = isErloes ? ((typeof latest.tariff === 'number') ? (latest.amount * latest.tariff).toFixed(2) : '—') : latest.amount.toFixed(1);
+    if (isErloes) {
+      statsDiv.innerHTML = `
+        <div class="stat">
+          <div class="stat-label">Letzter Monat</div>
+          <div class="stat-value">${latestVal} <span class="stat-unit">€</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Erlös ${currentYear}</div>
+          <div class="stat-value">${yearErloes.toFixed(2)} <span class="stat-unit">€</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Gesamt-Erlös</div>
+          <div class="stat-value">${totalErloes.toFixed(2)} <span class="stat-unit">€</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Ø Vergütung</div>
+          <div class="stat-value">${withTariff.length ? (withTariff.reduce((s,e) => s+e.tariff, 0)/withTariff.length).toFixed(2) : '—'} <span class="stat-unit">€/kWh</span></div>
+        </div>
+      `;
+    } else {
+      statsDiv.innerHTML = `
+        <div class="stat">
+          <div class="stat-label">Letzter Monat</div>
+          <div class="stat-value">${latest.amount.toFixed(1)} <span class="stat-unit">kWh</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Einspeisung ${currentYear}</div>
+          <div class="stat-value">${yearKwh.toFixed(1)} <span class="stat-unit">kWh</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Gesamt-Einspeisung</div>
+          <div class="stat-value">${totalKwh.toFixed(1)} <span class="stat-unit">kWh</span></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Anzahl Monate erfasst</div>
+          <div class="stat-value">${data.length}</div>
+        </div>
+      `;
+    }
+  }
+
+  // Chart
+  const empty = document.getElementById('pvEmpty');
+  const chartWrap = document.getElementById('pvChartWrap');
+  if (data.length === 0) {
+    empty.style.display = 'block';
+    chartWrap.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  chartWrap.style.display = 'block';
+
+  document.getElementById('pvChartTitle').textContent = isErloes ? 'Erlös pro Monat (€)' : 'Einspeisung pro Monat (kWh)';
+
+  const labels = data.map(e => new Date(e.date + '-01').toLocaleDateString('de-DE', { month: 'short', year: 'numeric' }));
+  if (chartPv) chartPv.destroy();
+  chartPv = new Chart(document.getElementById('chartPv'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: isErloes ? 'Erlös (€)' : 'Einspeisung (kWh)',
+        data: data.map(e => isErloes ? ((typeof e.tariff === 'number' && !isNaN(e.tariff)) ? (e.amount * e.tariff).toFixed(2) : null) : e.amount.toFixed(1)),
+        backgroundColor: isErloes ? '#c68b2d' : '#e8a422',
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: chartZoomPlugin(),
+      scales: { y: { title: { display: true, text: isErloes ? '€' : 'kWh' } } }
     }
   });
 }
@@ -1579,11 +1890,12 @@ async function exportStromPdf() {
   pdfHeader(doc, 'Energieversorgung – Bericht');
   doc.autoTable({
     startY: 40,
-    head: [['Datum', 'Zählerstand (kWh)', 'Ableseart', 'Verbrauch seit letzter Ablesung']],
+    head: [['Datum', 'Zählerstand (kWh)', 'Ableseart', '€/kWh', 'Verbrauch seit letzter Ablesung']],
     body: data.map((e, i) => [
       fmtDate(e.date),
       e.reading.toFixed(1),
       READING_TYPES[e.type] ? READING_TYPES[e.type].replace(/^[^\s]+\s/, '') : '—',
+      (typeof e.price === 'number' && !isNaN(e.price)) ? e.price.toFixed(2) : '—',
       i > 0 ? (e.reading - data[i-1].reading).toFixed(1) + ' kWh' : '—'
     ]),
     headStyles: { fillColor: [31, 74, 48] },
@@ -2468,11 +2780,12 @@ document.getElementById('factsForm').addEventListener('submit', (e) => {
 function exportBackup() {
   const backup = {
     exportedAt: new Date().toISOString(),
-    version: 4,
+    version: 5,
     pool: load(POOL_KEY),
     strom: load(STROM_KEY),
     wasser: load(WASSER_KEY),
     rechnung: load(RECHNUNG_KEY),
+    pv: load(PV_KEY),
     dosing: load(POOL_DOSING_KEY),
     multitab: load(POOL_MULTITAB_KEY),
     filter: load(POOL_FILTER_KEY),
@@ -2502,6 +2815,7 @@ function importBackup(event) {
       if (!backup.pool || !backup.strom) throw new Error("Ungültiges Format");
       const wasser = backup.wasser || [];
       const rechnung = backup.rechnung || [];
+      const pv = backup.pv || [];
       const dosing = backup.dosing || [];
       const multitab = backup.multitab || [];
       const filter = backup.filter || [];
@@ -2513,6 +2827,7 @@ function importBackup(event) {
         `Sicherung vom ${new Date(backup.exportedAt).toLocaleString('de-DE')}\n\n` +
         `Enthält:\n• ${backup.pool.length} Poolmessungen\n• ${backup.strom.length} Stromzählerstände\n` +
         `• ${wasser.length} Wasserzählerstände\n• ${rechnung.length} Wasserrechnungen\n` +
+        `• ${pv.length} PV-Einspeisungen\n` +
         `• ${dosing.length} Zugaben · ${multitab.length} Multitab-Events · ${filter.length} Filter-Events · ${notes.length} Bemerkungen\n` +
         `• ${knowledge.length} Wissenseinträge\n\n` +
         `OK  = Ersetzen (bestehende Daten überschreiben)\n` +
@@ -2524,6 +2839,7 @@ function importBackup(event) {
         save(STROM_KEY, backup.strom);
         save(WASSER_KEY, wasser);
         save(RECHNUNG_KEY, rechnung);
+        save(PV_KEY, pv);
         save(POOL_DOSING_KEY, dosing);
         save(POOL_MULTITAB_KEY, multitab);
         save(POOL_FILTER_KEY, filter);
@@ -2536,6 +2852,7 @@ function importBackup(event) {
         save(STROM_KEY, uniq(load(STROM_KEY).concat(backup.strom)).sort((a,b) => a.date.localeCompare(b.date)));
         save(WASSER_KEY, uniq(load(WASSER_KEY).concat(wasser)).sort((a,b) => a.date.localeCompare(b.date)));
         save(RECHNUNG_KEY, uniq(load(RECHNUNG_KEY).concat(rechnung)).sort((a,b) => a.date.localeCompare(b.date)));
+        save(PV_KEY, uniq(load(PV_KEY).concat(pv)).sort((a,b) => a.date.localeCompare(b.date)));
         save(POOL_DOSING_KEY, uniq(load(POOL_DOSING_KEY).concat(dosing)).sort((a,b) => a.date.localeCompare(b.date)));
         save(POOL_MULTITAB_KEY, uniq(load(POOL_MULTITAB_KEY).concat(multitab)).sort((a,b) => a.date.localeCompare(b.date)));
         save(POOL_FILTER_KEY, uniq(load(POOL_FILTER_KEY).concat(filter)).sort((a,b) => a.date.localeCompare(b.date)));
@@ -2553,6 +2870,7 @@ function importBackup(event) {
       renderStrom();
       renderWasser();
       renderRechnung();
+      renderPv();
       renderDashboard();
       renderTimeline();
       renderKb();
