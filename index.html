@@ -231,22 +231,44 @@
     .btn-add:hover { background: var(--forest-dark); }
     .empty-hint { color: var(--muted); text-align: center; padding: 2rem 1rem; font-style: italic; }
 
-    /* ===== SUBTABS ===== */
+    /* ===== SUBTABS (vertikale Sidebar links im Pool-Tab) ===== */
+    .pool-layout {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
     .subtabs {
-      display: flex; gap: 0.5rem; flex-wrap: wrap;
-      margin-bottom: 1.5rem; padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      position: sticky;
+      top: 1rem;
     }
     .subtab-btn {
       background: transparent; border: 1px solid var(--border);
-      padding: 0.5rem 1rem; border-radius: 999px; cursor: pointer;
+      padding: 0.65rem 0.9rem; border-radius: 8px; cursor: pointer;
       font-family: inherit; font-size: 0.9rem; font-weight: 500;
-      color: var(--muted); transition: all 0.2s;
+      color: var(--muted); transition: all 0.15s;
+      text-align: left;
+      width: 100%;
     }
-    .subtab-btn:hover { border-color: var(--forest); color: var(--forest); }
-    .subtab-btn.active { background: var(--forest); color: white; border-color: var(--forest); }
+    .subtab-btn:hover { border-color: var(--forest); color: var(--forest); background: rgba(31,74,48,0.03); }
+    .subtab-btn.active { background: var(--forest); color: white; border-color: var(--forest); font-weight: 600; }
+    .subtab-content { min-width: 0; }
     .subtab-panel { display: none; }
     .subtab-panel.active { display: block; }
+    @media (max-width: 700px) {
+      .pool-layout { grid-template-columns: 1fr; }
+      .subtabs {
+        flex-direction: row;
+        flex-wrap: wrap;
+        position: static;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .subtab-btn { width: auto; border-radius: 999px; padding: 0.5rem 0.9rem; font-size: 0.85rem; }
+    }
 
     /* ===== POOL-STATUSKARTE ===== */
     .status-card {
@@ -424,19 +446,22 @@
     <button class="tab-btn active" data-tab="pool">🏊 Schwimmbadbetrieb</button>
     <button class="tab-btn" data-tab="strom">⚡ Energieversorgung</button>
     <button class="tab-btn" data-tab="wasser">💧 Wasserversorgung</button>
-    <button class="tab-btn" data-tab="rechnung">🧾 Wasserabrechnung</button>
+    <button class="tab-btn" data-tab="rechnung">🧾 Wasserversorgung der Nachbarn</button>
   </nav>
 
   <main>
     <!-- ===== POOL TAB ===== -->
     <section class="tab-panel active" id="tab-pool">
-      <!-- Sub-Navigation -->
-      <div class="subtabs">
-        <button class="subtab-btn active" data-subtab="dashboard">📊 Dashboard</button>
-        <button class="subtab-btn" data-subtab="erfassen">✏️ Erfassen</button>
-        <button class="subtab-btn" data-subtab="historie">📈 Historie</button>
-        <button class="subtab-btn" data-subtab="wissen">🧠 Wissen</button>
-      </div>
+      <div class="pool-layout">
+        <!-- Sub-Navigation vertikal links -->
+        <div class="subtabs">
+          <button class="subtab-btn active" data-subtab="dashboard">📊 Dashboard</button>
+          <button class="subtab-btn" data-subtab="erfassen">✏️ Erfassen</button>
+          <button class="subtab-btn" data-subtab="historie">📈 Historie</button>
+          <button class="subtab-btn" data-subtab="wissen">🧠 Wissen</button>
+        </div>
+
+        <div class="subtab-content">
 
       <!-- ============ DASHBOARD ============ -->
       <div class="subtab-panel active" id="sub-dashboard">
@@ -730,6 +755,8 @@
           <div id="kbEmpty" class="empty-hint">Noch keine Situationen erfasst.</div>
         </div>
       </div>
+        </div><!-- /.subtab-content -->
+      </div><!-- /.pool-layout -->
     </section>
 
     <!-- ===== STROM TAB ===== -->
@@ -1885,7 +1912,7 @@ async function exportRechnungPdf() {
   if (data.length === 0) { alert("Keine Daten zum Exportieren vorhanden."); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  pdfHeader(doc, 'Wasserabrechnung – Bericht');
+  pdfHeader(doc, 'Wasserversorgung der Nachbarn – Bericht');
 
   let y = 40;
   doc.setFontSize(11); doc.setFont('helvetica', 'bold');
@@ -1903,13 +1930,13 @@ async function exportRechnungPdf() {
   const img2 = await chartToImage('chartRechnungKosten');
   const img3 = await chartToImage('chartRechnungPreis');
   if (img1) { doc.addImage(img1, 'PNG', 15, y, 180, 65); y += 70; }
-  if (y > 200 && img2) { doc.addPage(); pdfHeader(doc, 'Wasserabrechnung – Bericht'); y = 40; }
+  if (y > 200 && img2) { doc.addPage(); pdfHeader(doc, 'Wasserversorgung der Nachbarn – Bericht'); y = 40; }
   if (img2) { doc.addImage(img2, 'PNG', 15, y, 180, 65); y += 70; }
-  if (y > 200 && img3) { doc.addPage(); pdfHeader(doc, 'Wasserabrechnung – Bericht'); y = 40; }
+  if (y > 200 && img3) { doc.addPage(); pdfHeader(doc, 'Wasserversorgung der Nachbarn – Bericht'); y = 40; }
   if (img3) { doc.addImage(img3, 'PNG', 15, y, 180, 65); y += 70; }
 
   doc.addPage();
-  pdfHeader(doc, 'Wasserabrechnung – Bericht');
+  pdfHeader(doc, 'Wasserversorgung der Nachbarn – Bericht');
   doc.autoTable({
     startY: 40,
     head: [['Rechnung vom', 'Zeitraum von', 'Zeitraum bis', 'Verbrauch (m³)', 'Betrag (€)', '€/m³']],
@@ -1922,7 +1949,7 @@ async function exportRechnungPdf() {
     styles: { font: 'helvetica', fontSize: 9 },
   });
 
-  doc.save(`${new Date().toISOString().split('T')[0]} Waldvilla Wangen Wasserabrechnung.pdf`);
+  doc.save(`${new Date().toISOString().split('T')[0]} Waldvilla Wangen Wasserversorgung der Nachbarn.pdf`);
 }
 
 /* =========================================================
