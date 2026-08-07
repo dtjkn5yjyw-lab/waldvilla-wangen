@@ -548,7 +548,7 @@
               <div class="chart-mini"><canvas id="miniChartFcl"></canvas></div>
             </div>
             <div>
-              <div class="mini-label">Alkalinität (mg/L)</div>
+              <div class="mini-label">Alkalinität (ppm)</div>
               <div class="chart-mini"><canvas id="miniChartAlk"></canvas></div>
             </div>
           </div>
@@ -579,7 +579,7 @@
                 <input type="number" id="pTemp" step="0.1" placeholder="z. B. 24.5" />
               </div>
               <div class="form-group">
-                <label for="pAlk">Alkalinität (mg/L)</label>
+                <label for="pAlk">Alkalinität (ppm)</label>
                 <input type="number" id="pAlk" step="1" min="0" placeholder="z. B. 120" />
               </div>
             </div>
@@ -1173,7 +1173,7 @@ const POOL_THRESHOLDS = {
   ph:   { green: [7.0, 7.4], yellow: [6.8, 7.6], unit: '', label: 'pH-Wert', decimals: 2 },
   fcl:  { green: [1.0, 2.0], yellow: [0.5, 3.0], unit: 'ppm', label: 'fCL', decimals: 2 },
   temp: { green: [24, 28],   yellow: [20, 32],   unit: '°C', label: 'Temperatur', decimals: 1 },
-  alk:  { green: [80, 120],  yellow: [60, 150],  unit: 'mg/L', label: 'Alkalinität', decimals: 0 },
+  alk:  { green: [80, 120],  yellow: [60, 150],  unit: 'ppm', label: 'Alkalinität', decimals: 0 },
 };
 
 /* Multitab-Standardlaufzeit-Schätzung als Fallback */
@@ -1386,7 +1386,7 @@ function renderPool() {
       labels,
       datasets: [
         { label: 'Wassertemperatur (°C)', data: data.map(e => toNum(e.temp)), borderColor: '#2d6a44', backgroundColor: 'rgba(45,106,68,0.1)', yAxisID: 'y', tension: 0.3, spanGaps: true },
-        { label: 'Alkalinität (mg/L)', data: data.map(e => toNum(e.alk)), borderColor: '#c68b2d', backgroundColor: 'rgba(198,139,45,0.1)', yAxisID: 'y1', tension: 0.3, spanGaps: true },
+        { label: 'Alkalinität (ppm)', data: data.map(e => toNum(e.alk)), borderColor: '#c68b2d', backgroundColor: 'rgba(198,139,45,0.1)', yAxisID: 'y1', tension: 0.3, spanGaps: true },
       ]
     },
     options: {
@@ -1394,7 +1394,7 @@ function renderPool() {
       plugins: chartZoomPlugin(),
       scales: {
         y: { position: 'left', title: { display: true, text: '°C' } },
-        y1: { position: 'right', title: { display: true, text: 'Alkalinität (mg/L)' }, grid: { drawOnChartArea: false } },
+        y1: { position: 'right', title: { display: true, text: 'Alkalinität (ppm)' }, grid: { drawOnChartArea: false } },
       }
     }
   });
@@ -1894,7 +1894,7 @@ async function exportPoolPdf() {
     if (nums.length === 0) return '—';
     return (nums.reduce((s, n) => s + n, 0) / nums.length).toFixed(decimals);
   };
-  doc.text(`Durchschnitt: pH ${avg('ph',2)}  |  fCL ${avg('fcl',2)} ppm  |  Temp. ${avg('temp',1)} °C  |  Alkalinität ${avg('alk',0)} mg/L`, 15, y); y += 8;
+  doc.text(`Durchschnitt: pH ${avg('ph',2)}  |  fCL ${avg('fcl',2)} ppm  |  Temp. ${avg('temp',1)} °C  |  Alkalinität ${avg('alk',0)} ppm`, 15, y); y += 8;
 
   // Charts
   const img1 = await chartToImage('chartPhFcl');
@@ -1908,7 +1908,7 @@ async function exportPoolPdf() {
   pdfHeader(doc, 'Schwimmbadbetrieb – Bericht');
   doc.autoTable({
     startY: 40,
-    head: [['Datum', 'pH', 'fCL (ppm)', 'Temp. (°C)', 'Alkalinität (mg/L)']],
+    head: [['Datum', 'pH', 'fCL (ppm)', 'Temp. (°C)', 'Alkalinität (ppm)']],
     body: data.map(e => [fmtDate(e.date), fmtVal(e.ph, 2), fmtVal(e.fcl, 2), fmtVal(e.temp, 1), fmtVal(e.alk, 0)]),
     headStyles: { fillColor: [31, 74, 48] },
     styles: { font: 'helvetica', fontSize: 9 },
@@ -2677,7 +2677,7 @@ function renderTimeline() {
   load(POOL_KEY).forEach((e, i) => events.push({
     date: e.date, type: 'measurement', idx: i, key: POOL_KEY,
     title: '💧 Messung',
-    detail: `pH ${fmtVal(e.ph, 2)} · fCL ${fmtVal(e.fcl, 2)} ppm · ${fmtVal(e.temp, 1)}°C · Alk ${fmtVal(e.alk, 0)} mg/L`
+    detail: `pH ${fmtVal(e.ph, 2)} · fCL ${fmtVal(e.fcl, 2)} ppm · ${fmtVal(e.temp, 1)}°C · Alk ${fmtVal(e.alk, 0)} ppm`
   }));
   load(POOL_DOSING_KEY).forEach((e, i) => events.push({
     date: e.date, type: 'dosing', idx: i, key: POOL_DOSING_KEY,
