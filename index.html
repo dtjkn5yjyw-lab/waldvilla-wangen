@@ -269,6 +269,46 @@
       min-width: 160px; text-align: center;
       font-size: 1.05rem; font-weight: 600; color: var(--forest);
     }
+
+    /* ===== INFO-BUTTON und INFO-MODAL ===== */
+    .info-btn {
+      background: none; border: none; cursor: pointer;
+      padding: 0.15rem 0.3rem; margin-left: 0.2rem;
+      font-size: 0.9em; line-height: 1;
+      border-radius: 4px; vertical-align: middle;
+    }
+    .info-btn:hover { background: rgba(31,74,48,0.1); }
+    .info-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(20, 48, 32, 0.5);
+      z-index: 1000; padding: 1rem;
+      align-items: center; justify-content: center;
+    }
+    .info-modal.active { display: flex; }
+    .info-modal-content {
+      background: var(--paper);
+      padding: 1.5rem 2rem 2rem;
+      border-radius: 12px;
+      max-width: 520px; width: 100%;
+      max-height: 85vh; overflow-y: auto;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .info-modal-close {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      background: transparent; border: none;
+      font-size: 1.5rem; cursor: pointer; color: var(--muted);
+      width: 34px; height: 34px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1; font-family: inherit;
+    }
+    .info-modal-close:hover { background: var(--border); }
+    .info-modal-content h3 { color: var(--forest); margin: 0 0 1rem; font-size: 1.15rem; }
+    .info-modal-content p { margin: 0.6rem 0; line-height: 1.55; }
+    .info-modal-content ul { margin: 0.5rem 0; padding-left: 1.25rem; }
+    .info-modal-content li { margin: 0.35rem 0; line-height: 1.5; }
+    .info-modal-content strong { color: var(--forest-dark); }
     .empty-hint { color: var(--muted); text-align: center; padding: 2rem 1rem; font-style: italic; }
 
     /* ===== SUBTABS (vertikale Sidebar links im Pool-Tab) ===== */
@@ -559,7 +599,7 @@
       <div class="subtab-panel" id="sub-erfassen">
         <div class="card">
           <h2>💧 Messung erfassen</h2>
-          <p style="color:var(--muted); font-size:0.85rem; margin-bottom:1rem;">Nur das Datum ist Pflicht. Nicht gemessene Werte einfach leer lassen. Bei pH und fCL sind auch die Angaben <strong>UR</strong> (Under Range) und <strong>OR</strong> (Over Range) zulässig.</p>
+          <p style="color:var(--muted); font-size:0.85rem; margin-bottom:1rem;">Nur das Datum ist Pflicht. Nicht gemessene Werte einfach leer lassen. Bei pH, fCL und tCL sind auch die Angaben <strong>UR</strong> (Under Range) und <strong>OR</strong> (Over Range) zulässig. Info-Buttons <span style="white-space:nowrap;">(<button type="button" class="info-btn" style="pointer-events:none;">ℹ️</button>)</span> zeigen das benötigte Reagenz.</p>
           <form id="poolForm">
             <div class="form-grid">
               <div class="form-group">
@@ -567,19 +607,23 @@
                 <input type="date" id="pDate" required />
               </div>
               <div class="form-group">
-                <label for="pPh">pH-Wert</label>
+                <label for="pPh">pH-Wert <button type="button" class="info-btn" onclick="showFieldInfo('ph')" title="Info">ℹ️</button></label>
                 <input type="text" id="pPh" placeholder="z. B. 7.20 · UR · OR" autocomplete="off" />
               </div>
               <div class="form-group">
-                <label for="pFcl">fCL (ppm)</label>
+                <label for="pFcl">fCL (ppm) <button type="button" class="info-btn" onclick="showFieldInfo('fcl')" title="Info">ℹ️</button></label>
                 <input type="text" id="pFcl" placeholder="z. B. 1.20 · UR · OR" autocomplete="off" />
               </div>
               <div class="form-group">
-                <label for="pTemp">Wassertemperatur (°C)</label>
+                <label for="pTcl">tCL (ppm) <button type="button" class="info-btn" onclick="showFieldInfo('tcl')" title="Info">ℹ️</button></label>
+                <input type="text" id="pTcl" placeholder="z. B. 1.30 · UR · OR" autocomplete="off" />
+              </div>
+              <div class="form-group">
+                <label for="pTemp">Wassertemperatur (°C) <button type="button" class="info-btn" onclick="showFieldInfo('temp')" title="Info">ℹ️</button></label>
                 <input type="number" id="pTemp" step="0.1" placeholder="z. B. 24.5" />
               </div>
               <div class="form-group">
-                <label for="pAlk">Alkalinität (ppm)</label>
+                <label for="pAlk">Alkalinität (ppm) <button type="button" class="info-btn" onclick="showFieldInfo('alk')" title="Info">ℹ️</button></label>
                 <input type="number" id="pAlk" step="1" min="0" placeholder="z. B. 120" />
               </div>
             </div>
@@ -705,7 +749,7 @@
               </div>
               <button type="button" class="chart-reset" onclick="resetChartZoom(chartPhFcl, chartTempAlk)">↻ Ansicht zurücksetzen</button>
             </div>
-            <h3>pH-Wert & fCL</h3>
+            <h3>pH-Wert, fCL & tCL</h3>
             <div class="chart-wrap"><canvas id="chartPhFcl"></canvas></div>
             <h3>Wassertemperatur & Alkalinität</h3>
             <div class="chart-wrap"><canvas id="chartTempAlk"></canvas></div>
@@ -718,7 +762,7 @@
             <table id="poolTable">
               <thead>
                 <tr>
-                  <th>Datum</th><th>pH</th><th>fCL</th><th>Temp. (°C)</th><th>Alkalinität</th><th></th>
+                  <th>Datum</th><th>pH</th><th>fCL</th><th>tCL</th><th>Temp. (°C)</th><th>Alkalinität</th><th></th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -1065,6 +1109,15 @@
   </main>
 </div>
 
+<!-- ===== INFO-MODAL für Feld-Erklärungen ===== -->
+<div class="info-modal" id="infoModal" onclick="if(event.target === this) closeInfoModal();">
+  <div class="info-modal-content">
+    <button type="button" class="info-modal-close" onclick="closeInfoModal()" title="Schließen">×</button>
+    <h3 id="infoModalTitle"></h3>
+    <div id="infoModalBody"></div>
+  </div>
+</div>
+
 <!-- ===== LIBRARIES ===== -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
@@ -1172,9 +1225,68 @@ function panCharts(direction, ...charts) {
 const POOL_THRESHOLDS = {
   ph:   { green: [7.0, 7.4], yellow: [6.8, 7.6], unit: '', label: 'pH-Wert', decimals: 2 },
   fcl:  { green: [1.0, 2.0], yellow: [0.5, 3.0], unit: 'ppm', label: 'fCL', decimals: 2 },
+  tcl:  { green: [1.0, 3.0], yellow: [0.5, 4.0], unit: 'ppm', label: 'tCL', decimals: 2 },
   temp: { green: [24, 28],   yellow: [20, 32],   unit: '°C', label: 'Temperatur', decimals: 1 },
   alk:  { green: [80, 120],  yellow: [60, 150],  unit: 'ppm', label: 'Alkalinität', decimals: 0 },
 };
+
+/* Info-Texte für die Feld-Info-Buttons */
+const FIELD_INFO = {
+  ph: {
+    title: 'pH-Wert bestimmen',
+    body: `
+      <p><strong>Reagenz: Phenol Red</strong> (Phenol-Rot-Tablette)</p>
+      <p>Eine Tablette in die Küvette geben, mit Wasser bis zur Markierung befüllen, auflösen — der Farbumschlag zeigt den pH-Wert im Bereich <strong>6,8–8,4</strong> an: gelb-orange (sauer) → rot → violett (basisch).</p>
+      <p><strong>Idealer Bereich:</strong> 7,0–7,4</p>
+      <p style="color:var(--muted); font-size:0.9rem;">Bei UR/OR: pH-Wert außerhalb des Messbereichs — meist zu sauer oder zu basisch. Frisches Reagenz und neue Probe verwenden.</p>`
+  },
+  fcl: {
+    title: 'Freies Chlor (fCL) bestimmen',
+    body: `
+      <p><strong>Reagenz: DPD No. 1</strong> (rapid, für freies Chlor)</p>
+      <p>Eine DPD-No.-1-Tablette in die Küvette mit Poolwasser geben und auflösen. Der Farbumschlag von farblos zu <strong>rosa/pink</strong> zeigt den Gehalt an freiem, desinfizierend wirksamem Chlor.</p>
+      <p><strong>Idealer Bereich:</strong> 1,0–2,0 ppm</p>
+      <p style="color:var(--muted); font-size:0.9rem;">Bei UR: Chlor zu niedrig oder Reagenz alt. Bei OR: sehr hoher Chlorgehalt.</p>`
+  },
+  tcl: {
+    title: 'Gesamtchlor (tCL) bestimmen',
+    body: `
+      <p><strong>Reagenzien: DPD No. 1 + DPD No. 3</strong></p>
+      <p>Zuerst mit DPD No. 1 das freie Chlor (fCL) messen. Dann in dieselbe Küvette eine DPD-No.-3-Tablette geben und auflösen — die Farbe wird intensiver. Der neue Messwert ist das <strong>Gesamtchlor (tCL)</strong> = frei + gebunden.</p>
+      <p><strong>Gebundenes Chlor</strong> = tCL − fCL. Dieser Wert sollte <strong>unter 0,5 ppm</strong> liegen. Höhere Werte deuten auf Chloramine hin (Chlorgeruch, Augenreizungen) — Abhilfe: Chlorschock.</p>
+      <p style="color:var(--muted); font-size:0.9rem;">Alternativ: <strong>DPD No. 4</strong> in einigen Systemen als Kombitablette für tCL in einem Schritt.</p>`
+  },
+  temp: {
+    title: 'Wassertemperatur messen',
+    body: `
+      <p><strong>Kein Reagenz</strong> — Thermometer verwenden. Bei elektronischen Poolteststreifen/PoolLab meist automatisch mit erfasst.</p>
+      <p><strong>Idealer Bereich:</strong> 24–28 °C</p>
+      <p style="color:var(--muted); font-size:0.9rem;">Wichtig zu wissen, weil die Wassertemperatur den Chlorverbrauch stark beeinflusst — je wärmer, desto schneller verbraucht sich das Chlor.</p>`
+  },
+  alk: {
+    title: 'Alkalinität (Säurekapazität) bestimmen',
+    body: `
+      <p><strong>Reagenz: Alkalinity M</strong> (auch als „Alka"- oder „Alkalinity"-Tablette bezeichnet)</p>
+      <p>Eine Tablette in die Küvette mit Poolwasser geben und auflösen. Die entstehende Farbe zeigt die Alkalinität — sie beschreibt die Fähigkeit des Wassers, pH-Schwankungen abzupuffern.</p>
+      <p><strong>Idealer Bereich:</strong> 80–120 ppm</p>
+      <p style="color:var(--muted); font-size:0.9rem;">Zu niedrige Alkalinität → pH-Wert schwankt stark. Zu hohe Alkalinität → pH lässt sich schwer senken.</p>`
+  },
+};
+
+function showFieldInfo(topic) {
+  const info = FIELD_INFO[topic];
+  if (!info) return;
+  document.getElementById('infoModalTitle').textContent = info.title;
+  document.getElementById('infoModalBody').innerHTML = info.body;
+  document.getElementById('infoModal').classList.add('active');
+}
+function closeInfoModal() {
+  document.getElementById('infoModal').classList.remove('active');
+}
+// ESC schließt Modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeInfoModal();
+});
 
 /* Multitab-Standardlaufzeit-Schätzung als Fallback */
 const MULTITAB_TYPICAL_DAYS = 10; // pro Tab
@@ -1305,6 +1417,7 @@ document.getElementById('poolForm').addEventListener('submit', (e) => {
     date: document.getElementById('pDate').value,
     ph: parsePoolValue(document.getElementById('pPh').value, true),
     fcl: parsePoolValue(document.getElementById('pFcl').value, true),
+    tcl: parsePoolValue(document.getElementById('pTcl').value, true),
     temp: parsePoolValue(document.getElementById('pTemp').value, false),
     alk: parsePoolValue(document.getElementById('pAlk').value, false),
   };
@@ -1341,6 +1454,7 @@ function renderPool() {
       <td>${fmtDate(e.date)}</td>
       <td>${fmtVal(e.ph, 2)}</td>
       <td>${fmtVal(e.fcl, 2)}</td>
+      <td>${fmtVal(e.tcl, 2)}</td>
       <td>${fmtVal(e.temp, 1)}</td>
       <td>${fmtVal(e.alk, 0)}</td>
       <td><button class="delete-row" onclick="deletePool(${idx})" title="Löschen">✕</button></td>
@@ -1367,6 +1481,7 @@ function renderPool() {
       datasets: [
         { label: 'pH-Wert', data: data.map(e => toNum(e.ph)), borderColor: '#1f4a30', backgroundColor: 'rgba(31,74,48,0.1)', yAxisID: 'y', tension: 0.3, spanGaps: true },
         { label: 'fCL (ppm)', data: data.map(e => toNum(e.fcl)), borderColor: '#a03030', backgroundColor: 'rgba(160,48,48,0.1)', yAxisID: 'y1', tension: 0.3, spanGaps: true },
+        { label: 'tCL (ppm)', data: data.map(e => toNum(e.tcl)), borderColor: '#7a3c9a', backgroundColor: 'rgba(122,60,154,0.1)', yAxisID: 'y1', tension: 0.3, spanGaps: true, borderDash: [4, 4] },
       ]
     },
     options: {
@@ -1374,7 +1489,7 @@ function renderPool() {
       plugins: chartZoomPlugin(),
       scales: {
         y: { position: 'left', title: { display: true, text: 'pH' } },
-        y1: { position: 'right', title: { display: true, text: 'fCL (ppm)' }, grid: { drawOnChartArea: false } },
+        y1: { position: 'right', title: { display: true, text: 'Chlor (ppm)' }, grid: { drawOnChartArea: false } },
       }
     }
   });
@@ -1894,7 +2009,7 @@ async function exportPoolPdf() {
     if (nums.length === 0) return '—';
     return (nums.reduce((s, n) => s + n, 0) / nums.length).toFixed(decimals);
   };
-  doc.text(`Durchschnitt: pH ${avg('ph',2)}  |  fCL ${avg('fcl',2)} ppm  |  Temp. ${avg('temp',1)} °C  |  Alkalinität ${avg('alk',0)} ppm`, 15, y); y += 8;
+  doc.text(`Durchschnitt: pH ${avg('ph',2)}  |  fCL ${avg('fcl',2)} ppm  |  tCL ${avg('tcl',2)} ppm  |  Temp. ${avg('temp',1)} °C  |  Alkalinität ${avg('alk',0)} ppm`, 15, y); y += 8;
 
   // Charts
   const img1 = await chartToImage('chartPhFcl');
@@ -1908,8 +2023,8 @@ async function exportPoolPdf() {
   pdfHeader(doc, 'Schwimmbadbetrieb – Bericht');
   doc.autoTable({
     startY: 40,
-    head: [['Datum', 'pH', 'fCL (ppm)', 'Temp. (°C)', 'Alkalinität (ppm)']],
-    body: data.map(e => [fmtDate(e.date), fmtVal(e.ph, 2), fmtVal(e.fcl, 2), fmtVal(e.temp, 1), fmtVal(e.alk, 0)]),
+    head: [['Datum', 'pH', 'fCL (ppm)', 'tCL (ppm)', 'Temp. (°C)', 'Alkalinität (ppm)']],
+    body: data.map(e => [fmtDate(e.date), fmtVal(e.ph, 2), fmtVal(e.fcl, 2), fmtVal(e.tcl, 2), fmtVal(e.temp, 1), fmtVal(e.alk, 0)]),
     headStyles: { fillColor: [31, 74, 48] },
     styles: { font: 'helvetica', fontSize: 9 },
   });
@@ -2490,6 +2605,7 @@ function renderDashboard() {
   const values = [
     { key: 'ph', value: latest.ph },
     { key: 'fcl', value: latest.fcl },
+    { key: 'tcl', value: latest.tcl },
     { key: 'temp', value: latest.temp },
     { key: 'alk', value: latest.alk },
   ];
@@ -2677,7 +2793,7 @@ function renderTimeline() {
   load(POOL_KEY).forEach((e, i) => events.push({
     date: e.date, type: 'measurement', idx: i, key: POOL_KEY,
     title: '💧 Messung',
-    detail: `pH ${fmtVal(e.ph, 2)} · fCL ${fmtVal(e.fcl, 2)} ppm · ${fmtVal(e.temp, 1)}°C · Alk ${fmtVal(e.alk, 0)} ppm`
+    detail: `pH ${fmtVal(e.ph, 2)} · fCL ${fmtVal(e.fcl, 2)} · tCL ${fmtVal(e.tcl, 2)} ppm · ${fmtVal(e.temp, 1)}°C · Alk ${fmtVal(e.alk, 0)} ppm`
   }));
   load(POOL_DOSING_KEY).forEach((e, i) => events.push({
     date: e.date, type: 'dosing', idx: i, key: POOL_DOSING_KEY,
