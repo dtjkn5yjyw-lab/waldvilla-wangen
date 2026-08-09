@@ -299,6 +299,27 @@
       min-width: 70px; text-align: center;
       font-size: 1.05rem; font-weight: 600; color: var(--forest);
     }
+    /* Dropdown-Auswahl in der Nav (ersetzt die reine Label-Anzeige) */
+    .nav-select {
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--forest);
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4rem 0.6rem;
+      cursor: pointer;
+      text-align: center;
+      text-align-last: center;
+      min-width: 0;
+    }
+    .nav-select:focus {
+      outline: none;
+      border-color: var(--forest);
+    }
+    .nav-select.year { min-width: 90px; }
+    .nav-select.month { min-width: 160px; }
     .year-nav {
       display: flex; align-items: center; gap: 0.4rem;
     }
@@ -892,7 +913,7 @@
         </div>
         <div class="month-nav" id="stromMonthNav" style="display:none;">
           <button type="button" class="month-nav-btn" id="stromMonthPrev" onclick="navStromMonth(-1)" title="Vorheriger Monat">◀</button>
-          <span class="month-nav-label" id="stromMonthLabel">—</span>
+          <select class="nav-select month" id="stromMonthSelect" onchange="setStromMonth(parseInt(this.value))"></select>
           <button type="button" class="month-nav-btn" id="stromMonthNext" onclick="navStromMonth(1)" title="Nächster Monat">▶</button>
         </div>
         <div class="stats-grid" id="stromStats"></div>
@@ -905,7 +926,7 @@
           <div class="chart-controls">
             <div class="year-nav" id="stromYearNav" style="display:none;">
               <button type="button" class="month-nav-btn" id="stromYearPrev" onclick="navStromYear(-1)" title="Vorheriges Jahr">◀</button>
-              <span class="year-nav-label" id="stromYearLabel">—</span>
+              <select class="nav-select year" id="stromYearSelect" onchange="setStromYear(this.value)"></select>
               <button type="button" class="month-nav-btn" id="stromYearNext" onclick="navStromYear(1)" title="Nächstes Jahr">▶</button>
             </div>
             <button type="button" class="chart-reset" onclick="resetChartZoom(chartMonth, chartDailyByMonth)">↻ Ansicht zurücksetzen</button>
@@ -1013,7 +1034,7 @@
         <h2>Übersicht</h2>
         <div class="month-nav" id="wasserMonthNav" style="display:none;">
           <button type="button" class="month-nav-btn" id="wasserMonthPrev" onclick="navWasserMonth(-1)" title="Vorheriger Monat">◀</button>
-          <span class="month-nav-label" id="wasserMonthLabel">—</span>
+          <select class="nav-select month" id="wasserMonthSelect" onchange="setWasserMonth(parseInt(this.value))"></select>
           <button type="button" class="month-nav-btn" id="wasserMonthNext" onclick="navWasserMonth(1)" title="Nächster Monat">▶</button>
         </div>
         <div class="stats-grid" id="wasserStats"></div>
@@ -1310,10 +1331,28 @@ function navStromYear(direction) {
   renderStrom();
 }
 
+/* Direkt-Auswahl per Dropdown */
+function setStromMonth(idx) {
+  if (isNaN(idx)) return;
+  stromSelectedMonthIdx = idx;
+  renderStrom();
+}
+function setStromYear(year) {
+  if (!year) return;
+  stromSelectedYear = String(year);
+  renderStrom();
+}
+function setWasserMonth(idx) {
+  if (isNaN(idx)) return;
+  wasserSelectedMonthIdx = idx;
+  renderWasser();
+}
+
 /* Monatsnavigation für Übersicht */
 function navStromMonth(direction) {
   const sorted = load(STROM_KEY).slice().sort((a,b) => a.date.localeCompare(b.date));
-  const stats = computeStromStats(sorted);
+  const enhanced = interpolateReadings(sorted);
+  const stats = computeStromStats(enhanced);
   if (stats.monthly.length === 0) return;
   if (stromSelectedMonthIdx === null) stromSelectedMonthIdx = stats.monthly.length - 1;
   const newIdx = stromSelectedMonthIdx + direction;
@@ -1917,7 +1956,11 @@ function renderStrom() {
     const selectedYear = selectedMonth.key.substring(0, 4);
     const yr = stats.yearly[selectedYear];
     monthNav.style.display = 'flex';
-    document.getElementById('stromMonthLabel').textContent = selectedMonth.label;
+    // Monats-Dropdown befüllen
+    const monthSel = document.getElementById('stromMonthSelect');
+    monthSel.innerHTML = stats.monthly.map((m, i) =>
+      `<option value="${i}"${i === stromSelectedMonthIdx ? ' selected' : ''}>${m.label}</option>`
+    ).join('');
     document.getElementById('stromMonthPrev').disabled = stromSelectedMonthIdx === 0;
     document.getElementById('stromMonthNext').disabled = stromSelectedMonthIdx === stats.monthly.length - 1;
 
@@ -1985,7 +2028,11 @@ function renderStrom() {
       stromSelectedYear = availableYears[availableYears.length - 1];
     }
     yearNav.style.display = 'flex';
-    document.getElementById('stromYearLabel').textContent = stromSelectedYear;
+    // Year-Dropdown befüllen
+    const yearSel = document.getElementById('stromYearSelect');
+    yearSel.innerHTML = availableYears.map(y =>
+      `<option value="${y}"${y === stromSelectedYear ? ' selected' : ''}>${y}</option>`
+    ).join('');
     const yIdx = availableYears.indexOf(stromSelectedYear);
     document.getElementById('stromYearPrev').disabled = yIdx === 0;
     document.getElementById('stromYearNext').disabled = yIdx === availableYears.length - 1;
@@ -2466,7 +2513,10 @@ function renderWasser() {
     const selectedYear = selectedMonth.key.substring(0, 4);
     const yr = stats.yearly[selectedYear];
     monthNav.style.display = 'flex';
-    document.getElementById('wasserMonthLabel').textContent = selectedMonth.label;
+    const monthSel = document.getElementById('wasserMonthSelect');
+    monthSel.innerHTML = stats.monthly.map((m, i) =>
+      `<option value="${i}"${i === wasserSelectedMonthIdx ? ' selected' : ''}>${m.label}</option>`
+    ).join('');
     document.getElementById('wasserMonthPrev').disabled = wasserSelectedMonthIdx === 0;
     document.getElementById('wasserMonthNext').disabled = wasserSelectedMonthIdx === stats.monthly.length - 1;
 
