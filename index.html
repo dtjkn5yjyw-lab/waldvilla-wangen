@@ -169,6 +169,32 @@
       font-size: 1rem; padding: 0.25rem 0.5rem; border-radius: 4px;
     }
     .delete-row:hover { background: rgba(160, 48, 48, 0.1); }
+    .edit-row {
+      background: transparent; border: none; color: var(--forest); cursor: pointer;
+      font-size: 1rem; padding: 0.25rem 0.5rem; border-radius: 4px;
+      margin-right: 0.25rem;
+    }
+    .edit-row:hover { background: rgba(31, 74, 48, 0.1); }
+
+    /* ===== EDIT-MODAL für Messungen ===== */
+    .edit-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(20, 48, 32, 0.5);
+      z-index: 1000; padding: 1rem;
+      align-items: center; justify-content: center;
+    }
+    .edit-modal.active { display: flex; }
+    .edit-modal-content {
+      background: var(--paper);
+      padding: 1.5rem 2rem 2rem;
+      border-radius: 12px;
+      max-width: 720px; width: 100%;
+      max-height: 90vh; overflow-y: auto;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .edit-modal-content h3 { color: var(--forest); margin: 0 0 1rem; font-size: 1.2rem; }
 
     .stats-grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -626,6 +652,10 @@
                 <label for="pAlk">Alkalinität (ppm) <button type="button" class="info-btn" onclick="showFieldInfo('alk')" title="Info">ℹ️</button></label>
                 <input type="number" id="pAlk" step="1" min="0" placeholder="z. B. 120" />
               </div>
+              <div class="form-group">
+                <label for="pCya">CYA (ppm) <button type="button" class="info-btn" onclick="showFieldInfo('cya')" title="Info">ℹ️</button></label>
+                <input type="number" id="pCya" step="1" min="0" placeholder="z. B. 40" />
+              </div>
             </div>
             <div class="form-actions">
               <button type="submit" class="btn">Speichern</button>
@@ -751,7 +781,7 @@
             </div>
             <h3>pH-Wert, fCL & tCL</h3>
             <div class="chart-wrap"><canvas id="chartPhFcl"></canvas></div>
-            <h3>Wassertemperatur & Alkalinität</h3>
+            <h3>Wassertemperatur, Alkalinität & CYA</h3>
             <div class="chart-wrap"><canvas id="chartTempAlk"></canvas></div>
           </div>
         </div>
@@ -762,7 +792,7 @@
             <table id="poolTable">
               <thead>
                 <tr>
-                  <th>Datum</th><th>pH</th><th>fCL</th><th>tCL</th><th>Temp. (°C)</th><th>Alkalinität</th><th></th>
+                  <th>Datum</th><th>pH</th><th>fCL</th><th>tCL</th><th>Temp. (°C)</th><th>Alkalinität</th><th>CYA</th><th></th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -1118,6 +1148,51 @@
   </div>
 </div>
 
+<!-- ===== EDIT-MODAL für Pool-Messungen ===== -->
+<div class="edit-modal" id="editPoolModal" onclick="if(event.target === this) closeEditPoolModal();">
+  <div class="edit-modal-content">
+    <button type="button" class="info-modal-close" onclick="closeEditPoolModal()" title="Schließen">×</button>
+    <h3>Messung bearbeiten</h3>
+    <form id="editPoolForm">
+      <input type="hidden" id="edPoolIdx" />
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="edPDate">Datum</label>
+          <input type="date" id="edPDate" required />
+        </div>
+        <div class="form-group">
+          <label for="edPPh">pH-Wert</label>
+          <input type="text" id="edPPh" placeholder="z. B. 7.20 · UR · OR" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label for="edPFcl">fCL (ppm)</label>
+          <input type="text" id="edPFcl" placeholder="z. B. 1.20 · UR · OR" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label for="edPTcl">tCL (ppm)</label>
+          <input type="text" id="edPTcl" placeholder="z. B. 1.30 · UR · OR" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label for="edPTemp">Wassertemperatur (°C)</label>
+          <input type="number" id="edPTemp" step="0.1" placeholder="z. B. 24.5" />
+        </div>
+        <div class="form-group">
+          <label for="edPAlk">Alkalinität (ppm)</label>
+          <input type="number" id="edPAlk" step="1" min="0" placeholder="z. B. 120" />
+        </div>
+        <div class="form-group">
+          <label for="edPCya">CYA (ppm)</label>
+          <input type="number" id="edPCya" step="1" min="0" placeholder="z. B. 40" />
+        </div>
+      </div>
+      <div class="form-actions" style="margin-top: 1.25rem;">
+        <button type="submit" class="btn" style="width:auto;">Änderungen speichern</button>
+        <button type="button" class="btn btn-secondary" onclick="closeEditPoolModal()" style="width:auto;">Abbrechen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ===== LIBRARIES ===== -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
@@ -1228,6 +1303,7 @@ const POOL_THRESHOLDS = {
   tcl:  { green: [1.0, 3.0], yellow: [0.5, 4.0], unit: 'ppm', label: 'tCL', decimals: 2 },
   temp: { green: [24, 28],   yellow: [20, 32],   unit: '°C', label: 'Temperatur', decimals: 1 },
   alk:  { green: [80, 120],  yellow: [60, 150],  unit: 'ppm', label: 'Alkalinität', decimals: 0 },
+  cya:  { green: [30, 50],   yellow: [20, 80],   unit: 'ppm', label: 'CYA', decimals: 0 },
 };
 
 /* Info-Texte für die Feld-Info-Buttons */
@@ -1271,6 +1347,14 @@ const FIELD_INFO = {
       <p><strong>Idealer Bereich:</strong> 80–120 ppm</p>
       <p style="color:var(--muted); font-size:0.9rem;">Zu niedrige Alkalinität → pH-Wert schwankt stark. Zu hohe Alkalinität → pH lässt sich schwer senken.</p>`
   },
+  cya: {
+    title: 'Cyanursäure (CYA) bestimmen',
+    body: `
+      <p><strong>Reagenz: CYA-Test / Cyanursäure-Reagenz</strong> (Trübungstest, oft als Tablette oder Flüssigreagenz mit Melamin)</p>
+      <p>Cyanursäure — auch <em>Chlorstabilisator</em> oder <em>Isocyanursäure</em> genannt — schützt das freie Chlor vor der Zerstörung durch UV-Licht. Der Test erzeugt bei Zugabe eine Trübung: je höher die CYA-Konzentration, desto trüber die Lösung.</p>
+      <p><strong>Idealer Bereich:</strong> 30–50 ppm (Außenpool)</p>
+      <p style="color:var(--muted); font-size:0.9rem;">Zu niedrig → Chlor wird bei Sonne schnell abgebaut, hoher Chlorverbrauch. Zu hoch (>100 ppm) → „Chlor-Lock": Chlor wirkt kaum noch, teilweiser Wasseraustausch nötig. CYA steigt automatisch durch Multitabs (enthalten Stabilisator) und sinkt nur durch Verdünnung/Wasserwechsel.</p>`
+  },
 };
 
 function showFieldInfo(topic) {
@@ -1283,9 +1367,12 @@ function showFieldInfo(topic) {
 function closeInfoModal() {
   document.getElementById('infoModal').classList.remove('active');
 }
-// ESC schließt Modal
+// ESC schließt Modals
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeInfoModal();
+  if (e.key === 'Escape') {
+    closeInfoModal();
+    closeEditPoolModal();
+  }
 });
 
 /* Multitab-Standardlaufzeit-Schätzung als Fallback */
@@ -1420,6 +1507,7 @@ document.getElementById('poolForm').addEventListener('submit', (e) => {
     tcl: parsePoolValue(document.getElementById('pTcl').value, true),
     temp: parsePoolValue(document.getElementById('pTemp').value, false),
     alk: parsePoolValue(document.getElementById('pAlk').value, false),
+    cya: parsePoolValue(document.getElementById('pCya').value, false),
   };
   const data = load(POOL_KEY);
   data.push(entry);
@@ -1442,6 +1530,54 @@ function deletePool(idx) {
   renderTimeline();
 }
 
+/* Messung bearbeiten */
+function editPool(idx) {
+  const data = load(POOL_KEY);
+  const e = data[idx];
+  if (!e) return;
+  const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (v === null || v === undefined) { el.value = ''; return; }
+    el.value = String(v);
+  };
+  document.getElementById('edPoolIdx').value = idx;
+  setVal('edPDate', e.date);
+  setVal('edPPh', e.ph);
+  setVal('edPFcl', e.fcl);
+  setVal('edPTcl', e.tcl);
+  // Bei Zahl-Feldern: UR/OR-Strings sind hier ungültig, aber pool-Daten für temp/alk/cya sollten Zahlen sein
+  setVal('edPTemp', typeof e.temp === 'string' ? '' : e.temp);
+  setVal('edPAlk', typeof e.alk === 'string' ? '' : e.alk);
+  setVal('edPCya', typeof e.cya === 'string' ? '' : e.cya);
+  document.getElementById('editPoolModal').classList.add('active');
+}
+
+function closeEditPoolModal() {
+  document.getElementById('editPoolModal').classList.remove('active');
+}
+
+document.getElementById('editPoolForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const idx = parseInt(document.getElementById('edPoolIdx').value);
+  const data = load(POOL_KEY);
+  if (isNaN(idx) || idx < 0 || idx >= data.length) return;
+  data[idx] = {
+    date: document.getElementById('edPDate').value,
+    ph: parsePoolValue(document.getElementById('edPPh').value, true),
+    fcl: parsePoolValue(document.getElementById('edPFcl').value, true),
+    tcl: parsePoolValue(document.getElementById('edPTcl').value, true),
+    temp: parsePoolValue(document.getElementById('edPTemp').value, false),
+    alk: parsePoolValue(document.getElementById('edPAlk').value, false),
+    cya: parsePoolValue(document.getElementById('edPCya').value, false),
+  };
+  data.sort((a, b) => a.date.localeCompare(b.date));
+  save(POOL_KEY, data);
+  closeEditPoolModal();
+  renderPool();
+  renderDashboard();
+  renderTimeline();
+});
+
 let chartPhFcl, chartTempAlk;
 function renderPool() {
   const data = load(POOL_KEY);
@@ -1457,7 +1593,11 @@ function renderPool() {
       <td>${fmtVal(e.tcl, 2)}</td>
       <td>${fmtVal(e.temp, 1)}</td>
       <td>${fmtVal(e.alk, 0)}</td>
-      <td><button class="delete-row" onclick="deletePool(${idx})" title="Löschen">✕</button></td>
+      <td>${fmtVal(e.cya, 0)}</td>
+      <td>
+        <button class="edit-row" onclick="editPool(${idx})" title="Bearbeiten">✏️</button>
+        <button class="delete-row" onclick="deletePool(${idx})" title="Löschen">✕</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -1502,6 +1642,7 @@ function renderPool() {
       datasets: [
         { label: 'Wassertemperatur (°C)', data: data.map(e => toNum(e.temp)), borderColor: '#2d6a44', backgroundColor: 'rgba(45,106,68,0.1)', yAxisID: 'y', tension: 0.3, spanGaps: true },
         { label: 'Alkalinität (ppm)', data: data.map(e => toNum(e.alk)), borderColor: '#c68b2d', backgroundColor: 'rgba(198,139,45,0.1)', yAxisID: 'y1', tension: 0.3, spanGaps: true },
+        { label: 'CYA (ppm)', data: data.map(e => toNum(e.cya)), borderColor: '#3a7ca5', backgroundColor: 'rgba(58,124,165,0.1)', yAxisID: 'y1', tension: 0.3, spanGaps: true, borderDash: [6, 4] },
       ]
     },
     options: {
@@ -1509,7 +1650,7 @@ function renderPool() {
       plugins: chartZoomPlugin(),
       scales: {
         y: { position: 'left', title: { display: true, text: '°C' } },
-        y1: { position: 'right', title: { display: true, text: 'Alkalinität (ppm)' }, grid: { drawOnChartArea: false } },
+        y1: { position: 'right', title: { display: true, text: 'ppm (Alk & CYA)' }, grid: { drawOnChartArea: false } },
       }
     }
   });
@@ -2009,7 +2150,7 @@ async function exportPoolPdf() {
     if (nums.length === 0) return '—';
     return (nums.reduce((s, n) => s + n, 0) / nums.length).toFixed(decimals);
   };
-  doc.text(`Durchschnitt: pH ${avg('ph',2)}  |  fCL ${avg('fcl',2)} ppm  |  tCL ${avg('tcl',2)} ppm  |  Temp. ${avg('temp',1)} °C  |  Alkalinität ${avg('alk',0)} ppm`, 15, y); y += 8;
+  doc.text(`Durchschnitt: pH ${avg('ph',2)}  |  fCL ${avg('fcl',2)} ppm  |  tCL ${avg('tcl',2)} ppm  |  Temp. ${avg('temp',1)} °C  |  Alkalinität ${avg('alk',0)} ppm  |  CYA ${avg('cya',0)} ppm`, 15, y); y += 8;
 
   // Charts
   const img1 = await chartToImage('chartPhFcl');
@@ -2023,8 +2164,8 @@ async function exportPoolPdf() {
   pdfHeader(doc, 'Schwimmbadbetrieb – Bericht');
   doc.autoTable({
     startY: 40,
-    head: [['Datum', 'pH', 'fCL (ppm)', 'tCL (ppm)', 'Temp. (°C)', 'Alkalinität (ppm)']],
-    body: data.map(e => [fmtDate(e.date), fmtVal(e.ph, 2), fmtVal(e.fcl, 2), fmtVal(e.tcl, 2), fmtVal(e.temp, 1), fmtVal(e.alk, 0)]),
+    head: [['Datum', 'pH', 'fCL (ppm)', 'tCL (ppm)', 'Temp. (°C)', 'Alkalinität (ppm)', 'CYA (ppm)']],
+    body: data.map(e => [fmtDate(e.date), fmtVal(e.ph, 2), fmtVal(e.fcl, 2), fmtVal(e.tcl, 2), fmtVal(e.temp, 1), fmtVal(e.alk, 0), fmtVal(e.cya, 0)]),
     headStyles: { fillColor: [31, 74, 48] },
     styles: { font: 'helvetica', fontSize: 9 },
   });
@@ -2608,6 +2749,7 @@ function renderDashboard() {
     { key: 'tcl', value: latest.tcl },
     { key: 'temp', value: latest.temp },
     { key: 'alk', value: latest.alk },
+    { key: 'cya', value: latest.cya },
   ];
   const colors = values.map(v => ampelClass(v.key, v.value));
   const overall = overallStatus(colors);
@@ -2793,7 +2935,7 @@ function renderTimeline() {
   load(POOL_KEY).forEach((e, i) => events.push({
     date: e.date, type: 'measurement', idx: i, key: POOL_KEY,
     title: '💧 Messung',
-    detail: `pH ${fmtVal(e.ph, 2)} · fCL ${fmtVal(e.fcl, 2)} · tCL ${fmtVal(e.tcl, 2)} ppm · ${fmtVal(e.temp, 1)}°C · Alk ${fmtVal(e.alk, 0)} ppm`
+    detail: `pH ${fmtVal(e.ph, 2)} · fCL ${fmtVal(e.fcl, 2)} · tCL ${fmtVal(e.tcl, 2)} ppm · ${fmtVal(e.temp, 1)}°C · Alk ${fmtVal(e.alk, 0)} · CYA ${fmtVal(e.cya, 0)} ppm`
   }));
   load(POOL_DOSING_KEY).forEach((e, i) => events.push({
     date: e.date, type: 'dosing', idx: i, key: POOL_DOSING_KEY,
