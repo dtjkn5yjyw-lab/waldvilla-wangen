@@ -295,6 +295,21 @@
       min-width: 160px; text-align: center;
       font-size: 1.05rem; font-weight: 600; color: var(--forest);
     }
+    .year-nav-label {
+      min-width: 70px; text-align: center;
+      font-size: 1.05rem; font-weight: 600; color: var(--forest);
+    }
+    .year-nav {
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+
+    /* Interpolierte Zählerstände in der Tabelle */
+    tr.interpolated-row td {
+      background: rgba(58, 124, 165, 0.04);
+      font-style: italic;
+      color: var(--muted);
+    }
+    tr.interpolated-row:hover td { background: rgba(58, 124, 165, 0.08); }
 
     /* ===== INFO-BUTTON und INFO-MODAL ===== */
     .info-btn {
@@ -888,9 +903,10 @@
         <div id="stromEmpty" class="empty-hint">Noch keine Zählerstände erfasst.</div>
         <div id="stromCharts" style="display:none;">
           <div class="chart-controls">
-            <div class="chart-nav">
-              <button type="button" class="chart-nav-btn" onclick="panCharts(-1, chartMonth, chartDailyByMonth)" title="Nach links">◀</button>
-              <button type="button" class="chart-nav-btn" onclick="panCharts(1, chartMonth, chartDailyByMonth)" title="Nach rechts">▶</button>
+            <div class="year-nav" id="stromYearNav" style="display:none;">
+              <button type="button" class="month-nav-btn" id="stromYearPrev" onclick="navStromYear(-1)" title="Vorheriges Jahr">◀</button>
+              <span class="year-nav-label" id="stromYearLabel">—</span>
+              <button type="button" class="month-nav-btn" id="stromYearNext" onclick="navStromYear(1)" title="Nächstes Jahr">▶</button>
             </div>
             <button type="button" class="chart-reset" onclick="resetChartZoom(chartMonth, chartDailyByMonth)">↻ Ansicht zurücksetzen</button>
           </div>
@@ -938,6 +954,7 @@
             <tbody id="stromDataRows"></tbody>
           </table>
         </div>
+        <p style="color:var(--muted); font-size:0.82rem; margin-top:0.75rem; font-style:italic;">Kursive Zeilen sind rechnerisch zwischen deinen tatsächlichen Ablesungen interpolierte Werte am Monatsende.</p>
       </div>
 
       <div class="card">
@@ -1228,6 +1245,70 @@ let pvMode = 'einspeisung';  // 'einspeisung' | 'erloes'
 /* Ausgewählter Monat für Übersichts-Kacheln (null = letzter Monat) */
 let stromSelectedMonthIdx = null;
 let wasserSelectedMonthIdx = null;
+
+/* Ausgewähltes Jahr für Monatsverbrauch-Chart (null = letztes Jahr) */
+let stromSelectedYear = null;
+
+/* Linear-Interpolation der Zählerstände zwischen tatsächlich erfassten Ablesungen.
+   Für jeden Monat zwischen zwei Ablesungen wird ein virtueller Endstand berechnet
+   und als „Rechnerisch (interpoliert)" markiert. Wird nicht persistiert. */
+function interpolateReadings(sorted) {
+  if (sorted.length < 2) return sorted.map(e => ({...e, interpolated: false}));
+  const result = [];
+  for (let i = 0; i < sorted.length; i++) {
+    result.push({...sorted[i], interpolated: false});
+    if (i >= sorted.length - 1) break;
+    const before = sorted[i];
+    const after = sorted[i + 1];
+    const beforeDate = new Date(before.date);
+    const afterDate = new Date(after.date);
+    const beforeMs = beforeDate.getTime();
+    const afterMs = afterDate.getTime();
+    const denom = afterMs - beforeMs;
+    if (denom <= 0) continue;
+    // Iteriere durch Monatsende-Daten strictly between before und after
+    let cursor = new Date(beforeDate.getFullYear(), beforeDate.getMonth() + 1, 1);
+    while (true) {
+      const endOfMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
+      if (endOfMonth >= afterDate) break;
+      const ratio = (endOfMonth.getTime() - beforeMs) / denom;
+      const interpolatedReading = before.reading + (after.reading - before.reading) * ratio;
+      const y = endOfMonth.getFullYear();
+      const m = String(endOfMonth.getMonth() + 1).padStart(2, '0');
+      const d = String(endOfMonth.getDate()).padStart(2, '0');
+      // Preis vom vorherigen echten Eintrag übernehmen (falls vorhanden)
+      const price = (typeof before.price === 'number' && !isNaN(before.price)) ? before.price
+                  : (typeof after.price === 'number' && !isNaN(after.price)) ? after.price
+                  : null;
+      result.push({
+        date: `${y}-${m}-${d}`,
+        reading: interpolatedReading,
+        type: 'rechnerisch',
+        price: price,
+        interpolated: true,
+      });
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+    }
+  }
+  return result;
+}
+
+function navStromYear(direction) {
+  const rawData = load(STROM_KEY);
+  const sorted = rawData.slice().sort((a,b) => a.date.localeCompare(b.date));
+  const enhanced = interpolateReadings(sorted);
+  const stats = computeStromStats(enhanced);
+  const years = [...new Set(stats.monthly.map(m => m.key.substring(0, 4)))].sort();
+  if (years.length === 0) return;
+  if (stromSelectedYear === null || !years.includes(stromSelectedYear)) {
+    stromSelectedYear = years[years.length - 1];
+  }
+  const idx = years.indexOf(stromSelectedYear);
+  const newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= years.length) return;
+  stromSelectedYear = years[newIdx];
+  renderStrom();
+}
 
 /* Monatsnavigation für Übersicht */
 function navStromMonth(direction) {
@@ -1683,6 +1764,7 @@ function addStromEntry() {
   dateEl.value = new Date().toISOString().split('T')[0];
   typeEl.value = DEFAULT_READING_TYPE;
   stromSelectedMonthIdx = null; // → springt zum letzten Monat
+  stromSelectedYear = null;     // → springt zum letzten Jahr
   renderStrom();
   readingEl.focus();
 }
@@ -1785,43 +1867,55 @@ document.querySelectorAll('#stromModeToggle .mode-btn').forEach(btn => {
 
 let chartMonth, chartDailyByMonth;
 function renderStrom() {
-  const data = load(STROM_KEY);
+  const rawData = load(STROM_KEY);
+  const sorted = rawData.slice().sort((a,b) => a.date.localeCompare(b.date));
+  const enhanced = interpolateReadings(sorted);
+
+  // Tabelle mit realen + interpolierten Zeilen
   const tbody = document.getElementById('stromDataRows');
   tbody.innerHTML = "";
-  const sorted = data.slice().sort((a,b) => a.date.localeCompare(b.date));
-  sorted.slice().reverse().forEach((e, revIdx) => {
-    const sortedIdx = sorted.length - 1 - revIdx;
-    const origIdx = data.indexOf(e);
-    const prev = sortedIdx > 0 ? sorted[sortedIdx - 1] : null;
+  enhanced.slice().reverse().forEach((e, revIdx) => {
+    const sortedIdx = enhanced.length - 1 - revIdx;
+    const prev = sortedIdx > 0 ? enhanced[sortedIdx - 1] : null;
     const diff = prev ? (e.reading - prev.reading).toFixed(1) + ' kWh' : '—';
-    const typeLabel = READING_TYPES[e.type] || '—';
+    const typeLabel = e.interpolated
+      ? '📐 Rechnerisch (interpoliert)'
+      : (READING_TYPES[e.type] || '—');
     const priceLabel = (typeof e.price === 'number' && !isNaN(e.price)) ? e.price.toFixed(4) + ' €' : '—';
+    let actionCell = '';
+    if (!e.interpolated) {
+      // Reale Zeile → Löschbutton, Index in rawData suchen
+      const origIdx = rawData.findIndex(r =>
+        r.date === e.date && r.reading === e.reading && r.type === e.type && r.price === e.price
+      );
+      actionCell = `<button class="delete-row" onclick="deleteStrom(${origIdx})" title="Löschen">✕</button>`;
+    }
     const tr = document.createElement('tr');
+    if (e.interpolated) tr.classList.add('interpolated-row');
     tr.innerHTML = `
       <td>${fmtDate(e.date)}</td>
       <td>${e.reading.toFixed(1)}</td>
       <td>${typeLabel}</td>
       <td>${priceLabel}</td>
       <td>${diff}</td>
-      <td><button class="delete-row" onclick="deleteStrom(${origIdx})" title="Löschen">✕</button></td>
+      <td>${actionCell}</td>
     `;
     tbody.appendChild(tr);
   });
 
-  const stats = computeStromStats(sorted);
+  // Stats aus enhanced (mit interpolierten Werten → jeder Monat hat Daten)
+  const stats = computeStromStats(enhanced);
   const statsDiv = document.getElementById('stromStats');
   const monthNav = document.getElementById('stromMonthNav');
   statsDiv.innerHTML = "";
   const isKosten = stromMode === 'kosten';
   if (stats.monthly.length > 0) {
-    // Ausgewählten Monatsindex ggf. auf letzten Monat setzen
     if (stromSelectedMonthIdx === null || stromSelectedMonthIdx >= stats.monthly.length) {
       stromSelectedMonthIdx = stats.monthly.length - 1;
     }
     const selectedMonth = stats.monthly[stromSelectedMonthIdx];
     const selectedYear = selectedMonth.key.substring(0, 4);
     const yr = stats.yearly[selectedYear];
-    // Nav-UI aktualisieren
     monthNav.style.display = 'flex';
     document.getElementById('stromMonthLabel').textContent = selectedMonth.label;
     document.getElementById('stromMonthPrev').disabled = stromSelectedMonthIdx === 0;
@@ -1883,11 +1977,30 @@ function renderStrom() {
   empty.style.display = 'none';
   charts.style.display = 'block';
 
-  // Chart-Titel je nach Modus setzen
-  document.getElementById('chartMonthTitle').textContent = isKosten ? 'Kosten pro Monat (€)' : 'Verbrauch pro Monat (kWh)';
-  document.getElementById('chartDailyTitle').textContent = isKosten ? 'Ø Tageskosten pro Monat (€/Tag)' : 'Ø Tagesverbrauch pro Monat (kWh/Tag)';
+  // Year-Nav: verfügbare Jahre bestimmen
+  const availableYears = [...new Set(stats.monthly.map(m => m.key.substring(0, 4)))].sort();
+  const yearNav = document.getElementById('stromYearNav');
+  if (availableYears.length > 0) {
+    if (stromSelectedYear === null || !availableYears.includes(stromSelectedYear)) {
+      stromSelectedYear = availableYears[availableYears.length - 1];
+    }
+    yearNav.style.display = 'flex';
+    document.getElementById('stromYearLabel').textContent = stromSelectedYear;
+    const yIdx = availableYears.indexOf(stromSelectedYear);
+    document.getElementById('stromYearPrev').disabled = yIdx === 0;
+    document.getElementById('stromYearNext').disabled = yIdx === availableYears.length - 1;
+  } else {
+    yearNav.style.display = 'none';
+  }
 
-  const labels = stats.monthly.map(m => m.label);
+  // Monatsdaten auf ausgewähltes Jahr filtern
+  const yearMonths = stats.monthly.filter(m => m.key.startsWith(stromSelectedYear));
+
+  // Chart-Titel je nach Modus setzen (mit Jahr)
+  document.getElementById('chartMonthTitle').textContent = (isKosten ? 'Kosten pro Monat (€)' : 'Verbrauch pro Monat (kWh)') + ' – ' + stromSelectedYear;
+  document.getElementById('chartDailyTitle').textContent = (isKosten ? 'Ø Tageskosten pro Monat (€/Tag)' : 'Ø Tagesverbrauch pro Monat (kWh/Tag)') + ' – ' + stromSelectedYear;
+
+  const labels = yearMonths.map(m => m.label);
   if (chartMonth) chartMonth.destroy();
   chartMonth = new Chart(document.getElementById('chartMonth'), {
     type: 'bar',
@@ -1895,7 +2008,7 @@ function renderStrom() {
       labels,
       datasets: [{
         label: isKosten ? 'Kosten (€)' : 'Verbrauch (kWh)',
-        data: stats.monthly.map(m => isKosten ? (m.cost !== null ? m.cost.toFixed(2) : null) : m.usage.toFixed(1)),
+        data: yearMonths.map(m => isKosten ? (m.cost !== null ? m.cost.toFixed(2) : null) : m.usage.toFixed(1)),
         backgroundColor: isKosten ? '#a03030' : '#1f4a30',
       }]
     },
@@ -1913,7 +2026,7 @@ function renderStrom() {
       labels,
       datasets: [{
         label: isKosten ? 'Ø € / Tag' : 'Ø kWh / Tag',
-        data: stats.monthly.map(m => isKosten ? (m.dailyAvgCost !== null ? m.dailyAvgCost.toFixed(2) : null) : m.dailyAvg.toFixed(2)),
+        data: yearMonths.map(m => isKosten ? (m.dailyAvgCost !== null ? m.dailyAvgCost.toFixed(2) : null) : m.dailyAvg.toFixed(2)),
         backgroundColor: isKosten ? '#c68b2d' : '#2d6a44',
       }]
     },
@@ -2174,9 +2287,10 @@ async function exportPoolPdf() {
 }
 
 async function exportStromPdf() {
-  const data = load(STROM_KEY).slice().sort((a,b) => a.date.localeCompare(b.date));
-  if (data.length === 0) { alert("Keine Daten zum Exportieren vorhanden."); return; }
-  const stats = computeStromStats(data);
+  const rawData = load(STROM_KEY).slice().sort((a,b) => a.date.localeCompare(b.date));
+  if (rawData.length === 0) { alert("Keine Daten zum Exportieren vorhanden."); return; }
+  const enhanced = interpolateReadings(rawData);
+  const stats = computeStromStats(enhanced);
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   pdfHeader(doc, 'Energieversorgung – Bericht');
@@ -2185,9 +2299,9 @@ async function exportStromPdf() {
   doc.setFontSize(11); doc.setFont('helvetica', 'bold');
   doc.text('Zusammenfassung', 15, y); y += 6;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-  doc.text(`Anzahl Ablesungen: ${data.length}`, 15, y); y += 5;
-  doc.text(`Zeitraum: ${fmtDate(data[0].date)} – ${fmtDate(data[data.length-1].date)}`, 15, y); y += 5;
-  doc.text(`Gesamtverbrauch: ${(data[data.length-1].reading - data[0].reading).toFixed(1)} kWh`, 15, y); y += 8;
+  doc.text(`Anzahl echter Ablesungen: ${rawData.length}`, 15, y); y += 5;
+  doc.text(`Zeitraum: ${fmtDate(rawData[0].date)} – ${fmtDate(rawData[rawData.length-1].date)}`, 15, y); y += 5;
+  doc.text(`Gesamtverbrauch: ${(rawData[rawData.length-1].reading - rawData[0].reading).toFixed(1)} kWh`, 15, y); y += 8;
 
   // Jahresübersicht
   doc.setFont('helvetica', 'bold'); doc.text('Jahresübersicht', 15, y); y += 6;
@@ -2215,21 +2329,28 @@ async function exportStromPdf() {
     styles: { font: 'helvetica', fontSize: 9 },
   });
 
-  // Ablesungstabelle
+  // Ablesungstabelle (inkl. interpolierter Werte)
   doc.addPage();
   pdfHeader(doc, 'Energieversorgung – Bericht');
   doc.autoTable({
     startY: 40,
     head: [['Datum', 'Zählerstand (kWh)', 'Ableseart', '€/kWh', 'Verbrauch seit letzter Ablesung']],
-    body: data.map((e, i) => [
+    body: enhanced.map((e, i) => [
       fmtDate(e.date),
       e.reading.toFixed(1),
-      READING_TYPES[e.type] ? READING_TYPES[e.type].replace(/^[^\s]+\s/, '') : '—',
+      e.interpolated ? 'Rechnerisch (interpoliert)'
+                     : (READING_TYPES[e.type] ? READING_TYPES[e.type].replace(/^[^\s]+\s/, '') : '—'),
       (typeof e.price === 'number' && !isNaN(e.price)) ? e.price.toFixed(4) : '—',
-      i > 0 ? (e.reading - data[i-1].reading).toFixed(1) + ' kWh' : '—'
+      i > 0 ? (e.reading - enhanced[i-1].reading).toFixed(1) + ' kWh' : '—'
     ]),
     headStyles: { fillColor: [31, 74, 48] },
     styles: { font: 'helvetica', fontSize: 9 },
+    didParseCell: (data) => {
+      if (data.row.raw[2].includes('interpoliert')) {
+        data.cell.styles.textColor = [120, 120, 120];
+        data.cell.styles.fontStyle = 'italic';
+      }
+    },
   });
 
   doc.save(`${new Date().toISOString().split('T')[0]} Waldvilla Wangen Energieversorgung.pdf`);
