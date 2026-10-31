@@ -589,6 +589,7 @@
   <nav class="tabs">
     <button class="tab-btn active" data-tab="pool">🏊 Schwimmbadbetrieb</button>
     <button class="tab-btn" data-tab="strom">⚡ Energieversorgung</button>
+    <button class="tab-btn" data-tab="energieerzeugung">⚡️ Energieerzeugung</button>
     <button class="tab-btn" data-tab="wasser">💧 Wasserversorgung</button>
     <button class="tab-btn" data-tab="rechnung">🧾 Wasserversorgung der Nachbarn</button>
   </nav>
@@ -978,6 +979,10 @@
         <p style="color:var(--muted); font-size:0.82rem; margin-top:0.75rem; font-style:italic;">Kursive Zeilen sind rechnerisch zwischen deinen tatsächlichen Ablesungen interpolierte Werte am Monatsende.</p>
       </div>
 
+    </section>
+
+    <!-- ===== ENERGIEERZEUGUNG TAB (PV-Anlage) ===== -->
+    <section class="tab-panel" id="tab-energieerzeugung">
       <div class="card">
         <div class="card-header-row">
           <h2>☀️ PV-Einspeisung</h2>
@@ -1045,15 +1050,16 @@
         <div id="wasserEmpty" class="empty-hint">Noch keine Zählerstände erfasst.</div>
         <div id="wasserCharts" style="display:none;">
           <div class="chart-controls">
-            <div class="chart-nav">
-              <button type="button" class="chart-nav-btn" onclick="panCharts(-1, chartWasserMonth, chartWasserDaily)" title="Nach links">◀</button>
-              <button type="button" class="chart-nav-btn" onclick="panCharts(1, chartWasserMonth, chartWasserDaily)" title="Nach rechts">▶</button>
+            <div class="year-nav" id="wasserYearNav" style="display:none;">
+              <button type="button" class="month-nav-btn" id="wasserYearPrev" onclick="navWasserYear(-1)" title="Vorheriges Jahr">◀</button>
+              <select class="nav-select year" id="wasserYearSelect" onchange="setWasserYear(this.value)"></select>
+              <button type="button" class="month-nav-btn" id="wasserYearNext" onclick="navWasserYear(1)" title="Nächstes Jahr">▶</button>
             </div>
             <button type="button" class="chart-reset" onclick="resetChartZoom(chartWasserMonth, chartWasserDaily)">↻ Ansicht zurücksetzen</button>
           </div>
-          <h3>Verbrauch pro Monat (m³)</h3>
+          <h3 id="wasserChartMonthTitle">Verbrauch pro Monat (m³)</h3>
           <div class="chart-wrap"><canvas id="chartWasserMonth"></canvas></div>
-          <h3>Ø Tagesverbrauch pro Monat (m³/Tag)</h3>
+          <h3 id="wasserChartDailyTitle">Ø Tagesverbrauch pro Monat (m³/Tag)</h3>
           <div class="chart-wrap"><canvas id="chartWasserDaily"></canvas></div>
         </div>
       </div>
@@ -1093,6 +1099,7 @@
             <tbody id="wasserDataRows"></tbody>
           </table>
         </div>
+        <p style="color:var(--muted); font-size:0.82rem; margin-top:0.75rem; font-style:italic;">Kursive Zeilen sind rechnerisch zwischen deinen tatsächlichen Ablesungen interpolierte Werte am Monatsende.</p>
       </div>
     </section>
 
@@ -1269,46 +1276,68 @@ let wasserSelectedMonthIdx = null;
 
 /* Ausgewähltes Jahr für Monatsverbrauch-Chart (null = letztes Jahr) */
 let stromSelectedYear = null;
+let wasserSelectedYear = null;
 
 /* Linear-Interpolation der Zählerstände zwischen tatsächlich erfassten Ablesungen.
    Für jeden Monat zwischen zwei Ablesungen wird ein virtueller Endstand berechnet
-   und als „Rechnerisch (interpoliert)" markiert. Wird nicht persistiert. */
+   und als „Rechnerisch (interpoliert)" markiert – ABER NUR, wenn es für diesen
+   Monat keinen echten Nutzereintrag gibt. Wird nicht persistiert.
+   Timezone-sicher: rechnet ausschließlich mit UTC-Zeitstempeln und String-Vergleichen. */
 function interpolateReadings(sorted) {
   if (sorted.length < 2) return sorted.map(e => ({...e, interpolated: false}));
+  const monthsWithRealData = new Set(sorted.map(e => e.date.substring(0, 7)));
+  const datesWithRealData = new Set(sorted.map(e => e.date));
+
+  // Helper: YYYY-MM-DD → UTC-Millisekunden
+  const toUtcMs = (dateStr) => Date.UTC(
+    parseInt(dateStr.substring(0, 4)),
+    parseInt(dateStr.substring(5, 7)) - 1,
+    parseInt(dateStr.substring(8, 10))
+  );
+  // Helper: letzter Tag eines Monats (1-indexed) → YYYY-MM-DD String
+  const endOfMonthStr = (year, month) => {
+    const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+  };
+
   const result = [];
   for (let i = 0; i < sorted.length; i++) {
     result.push({...sorted[i], interpolated: false});
     if (i >= sorted.length - 1) break;
     const before = sorted[i];
     const after = sorted[i + 1];
-    const beforeDate = new Date(before.date);
-    const afterDate = new Date(after.date);
-    const beforeMs = beforeDate.getTime();
-    const afterMs = afterDate.getTime();
+    const beforeMs = toUtcMs(before.date);
+    const afterMs = toUtcMs(after.date);
     const denom = afterMs - beforeMs;
     if (denom <= 0) continue;
-    // Iteriere durch Monatsende-Daten strictly between before und after
-    let cursor = new Date(beforeDate.getFullYear(), beforeDate.getMonth() + 1, 1);
+
+    // Monatsindex hochzählen ab dem Monat nach `before`
+    let year = parseInt(before.date.substring(0, 4));
+    let month = parseInt(before.date.substring(5, 7));
     while (true) {
-      const endOfMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
-      if (endOfMonth >= afterDate) break;
-      const ratio = (endOfMonth.getTime() - beforeMs) / denom;
+      month++;
+      if (month > 12) { month = 1; year++; }
+      const dateStr = endOfMonthStr(year, month);
+      // Nur strikt VOR dem nächsten echten Eintrag interpolieren
+      if (dateStr >= after.date) break;
+      const monthKeyStr = dateStr.substring(0, 7);
+      // Überspringen, wenn dieser Monat oder dieses Datum schon einen echten Eintrag hat
+      if (monthsWithRealData.has(monthKeyStr)) continue;
+      if (datesWithRealData.has(dateStr)) continue;
+
+      const endMs = toUtcMs(dateStr);
+      const ratio = (endMs - beforeMs) / denom;
       const interpolatedReading = before.reading + (after.reading - before.reading) * ratio;
-      const y = endOfMonth.getFullYear();
-      const m = String(endOfMonth.getMonth() + 1).padStart(2, '0');
-      const d = String(endOfMonth.getDate()).padStart(2, '0');
-      // Preis vom vorherigen echten Eintrag übernehmen (falls vorhanden)
       const price = (typeof before.price === 'number' && !isNaN(before.price)) ? before.price
                   : (typeof after.price === 'number' && !isNaN(after.price)) ? after.price
                   : null;
       result.push({
-        date: `${y}-${m}-${d}`,
+        date: dateStr,
         reading: interpolatedReading,
         type: 'rechnerisch',
         price: price,
         interpolated: true,
       });
-      cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
     }
   }
   return result;
@@ -1362,12 +1391,35 @@ function navStromMonth(direction) {
 }
 function navWasserMonth(direction) {
   const sorted = load(WASSER_KEY).slice().sort((a,b) => a.date.localeCompare(b.date));
-  const stats = computeWasserStats(sorted);
+  const enhanced = interpolateReadings(sorted);
+  const stats = computeWasserStats(enhanced);
   if (stats.monthly.length === 0) return;
   if (wasserSelectedMonthIdx === null) wasserSelectedMonthIdx = stats.monthly.length - 1;
   const newIdx = wasserSelectedMonthIdx + direction;
   if (newIdx < 0 || newIdx >= stats.monthly.length) return;
   wasserSelectedMonthIdx = newIdx;
+  renderWasser();
+}
+
+function navWasserYear(direction) {
+  const sorted = load(WASSER_KEY).slice().sort((a,b) => a.date.localeCompare(b.date));
+  const enhanced = interpolateReadings(sorted);
+  const stats = computeWasserStats(enhanced);
+  const years = [...new Set(stats.monthly.map(m => m.key.substring(0, 4)))].sort();
+  if (years.length === 0) return;
+  if (wasserSelectedYear === null || !years.includes(wasserSelectedYear)) {
+    wasserSelectedYear = years[years.length - 1];
+  }
+  const idx = years.indexOf(wasserSelectedYear);
+  const newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= years.length) return;
+  wasserSelectedYear = years[newIdx];
+  renderWasser();
+}
+
+function setWasserYear(year) {
+  if (!year) return;
+  wasserSelectedYear = String(year);
   renderWasser();
 }
 
@@ -2425,6 +2477,7 @@ function addWasserEntry() {
   dateEl.value = new Date().toISOString().split('T')[0];
   typeEl.value = DEFAULT_READING_TYPE;
   wasserSelectedMonthIdx = null;
+  wasserSelectedYear = null;
   renderWasser();
   readingEl.focus();
 }
@@ -2480,28 +2533,40 @@ function computeWasserStats(data) {
 
 let chartWasserMonth, chartWasserDaily;
 function renderWasser() {
-  const data = load(WASSER_KEY);
+  const rawData = load(WASSER_KEY);
+  const sorted = rawData.slice().sort((a,b) => a.date.localeCompare(b.date));
+  const enhanced = interpolateReadings(sorted);
+
+  // Tabelle mit realen + interpolierten Zeilen
   const tbody = document.getElementById('wasserDataRows');
   tbody.innerHTML = "";
-  const sorted = data.slice().sort((a,b) => a.date.localeCompare(b.date));
-  sorted.slice().reverse().forEach((e, revIdx) => {
-    const sortedIdx = sorted.length - 1 - revIdx;
-    const origIdx = data.indexOf(e);
-    const prev = sortedIdx > 0 ? sorted[sortedIdx - 1] : null;
+  enhanced.slice().reverse().forEach((e, revIdx) => {
+    const sortedIdx = enhanced.length - 1 - revIdx;
+    const prev = sortedIdx > 0 ? enhanced[sortedIdx - 1] : null;
     const diff = prev ? (e.reading - prev.reading).toFixed(3) + ' m³' : '—';
-    const typeLabel = READING_TYPES[e.type] || '—';
+    const typeLabel = e.interpolated
+      ? '📐 Rechnerisch (interpoliert)'
+      : (READING_TYPES[e.type] || '—');
+    let actionCell = '';
+    if (!e.interpolated) {
+      const origIdx = rawData.findIndex(r =>
+        r.date === e.date && r.reading === e.reading && r.type === e.type
+      );
+      actionCell = `<button class="delete-row" onclick="deleteWasser(${origIdx})" title="Löschen">✕</button>`;
+    }
     const tr = document.createElement('tr');
+    if (e.interpolated) tr.classList.add('interpolated-row');
     tr.innerHTML = `
       <td>${fmtDate(e.date)}</td>
       <td>${e.reading.toFixed(3)}</td>
       <td>${typeLabel}</td>
       <td>${diff}</td>
-      <td><button class="delete-row" onclick="deleteWasser(${origIdx})" title="Löschen">✕</button></td>
+      <td>${actionCell}</td>
     `;
     tbody.appendChild(tr);
   });
 
-  const stats = computeWasserStats(sorted);
+  const stats = computeWasserStats(enhanced);
   const statsDiv = document.getElementById('wasserStats');
   const monthNav = document.getElementById('wasserMonthNav');
   statsDiv.innerHTML = "";
@@ -2553,11 +2618,37 @@ function renderWasser() {
   empty.style.display = 'none';
   charts.style.display = 'block';
 
-  const labels = stats.monthly.map(m => m.label);
+  // Year-Nav: verfügbare Jahre bestimmen
+  const availableYears = [...new Set(stats.monthly.map(m => m.key.substring(0, 4)))].sort();
+  const yearNav = document.getElementById('wasserYearNav');
+  if (availableYears.length > 0) {
+    if (wasserSelectedYear === null || !availableYears.includes(wasserSelectedYear)) {
+      wasserSelectedYear = availableYears[availableYears.length - 1];
+    }
+    yearNav.style.display = 'flex';
+    const yearSel = document.getElementById('wasserYearSelect');
+    yearSel.innerHTML = availableYears.map(y =>
+      `<option value="${y}"${y === wasserSelectedYear ? ' selected' : ''}>${y}</option>`
+    ).join('');
+    const yIdx = availableYears.indexOf(wasserSelectedYear);
+    document.getElementById('wasserYearPrev').disabled = yIdx === 0;
+    document.getElementById('wasserYearNext').disabled = yIdx === availableYears.length - 1;
+  } else {
+    yearNav.style.display = 'none';
+  }
+
+  // Monatsdaten auf ausgewähltes Jahr filtern
+  const yearMonths = stats.monthly.filter(m => m.key.startsWith(wasserSelectedYear));
+
+  // Chart-Titel mit Jahr
+  document.getElementById('wasserChartMonthTitle').textContent = `Verbrauch pro Monat (m³) – ${wasserSelectedYear}`;
+  document.getElementById('wasserChartDailyTitle').textContent = `Ø Tagesverbrauch pro Monat (m³/Tag) – ${wasserSelectedYear}`;
+
+  const labels = yearMonths.map(m => m.label);
   if (chartWasserMonth) chartWasserMonth.destroy();
   chartWasserMonth = new Chart(document.getElementById('chartWasserMonth'), {
     type: 'bar',
-    data: { labels, datasets: [{ label: 'Verbrauch (m³)', data: stats.monthly.map(m => m.usage.toFixed(3)), backgroundColor: '#2d6a8f' }] },
+    data: { labels, datasets: [{ label: 'Verbrauch (m³)', data: yearMonths.map(m => m.usage.toFixed(3)), backgroundColor: '#2d6a8f' }] },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: chartZoomPlugin(),
@@ -2566,7 +2657,7 @@ function renderWasser() {
   if (chartWasserDaily) chartWasserDaily.destroy();
   chartWasserDaily = new Chart(document.getElementById('chartWasserDaily'), {
     type: 'bar',
-    data: { labels, datasets: [{ label: 'Ø m³ / Tag', data: stats.monthly.map(m => m.dailyAvg.toFixed(3)), backgroundColor: '#4a8fb0' }] },
+    data: { labels, datasets: [{ label: 'Ø m³ / Tag', data: yearMonths.map(m => m.dailyAvg.toFixed(3)), backgroundColor: '#4a8fb0' }] },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: chartZoomPlugin(),
@@ -2699,9 +2790,10 @@ function renderRechnung() {
 }
 
 async function exportWasserPdf() {
-  const data = load(WASSER_KEY).slice().sort((a,b) => a.date.localeCompare(b.date));
-  if (data.length === 0) { alert("Keine Daten zum Exportieren vorhanden."); return; }
-  const stats = computeWasserStats(data);
+  const rawData = load(WASSER_KEY).slice().sort((a,b) => a.date.localeCompare(b.date));
+  if (rawData.length === 0) { alert("Keine Daten zum Exportieren vorhanden."); return; }
+  const enhanced = interpolateReadings(rawData);
+  const stats = computeWasserStats(enhanced);
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   pdfHeader(doc, 'Wasserversorgung – Bericht');
@@ -2710,9 +2802,9 @@ async function exportWasserPdf() {
   doc.setFontSize(11); doc.setFont('helvetica', 'bold');
   doc.text('Zusammenfassung', 15, y); y += 6;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-  doc.text(`Anzahl Ablesungen: ${data.length}`, 15, y); y += 5;
-  doc.text(`Zeitraum: ${fmtDate(data[0].date)} – ${fmtDate(data[data.length-1].date)}`, 15, y); y += 5;
-  doc.text(`Gesamtverbrauch: ${(data[data.length-1].reading - data[0].reading).toFixed(3)} m³`, 15, y); y += 8;
+  doc.text(`Anzahl echter Ablesungen: ${rawData.length}`, 15, y); y += 5;
+  doc.text(`Zeitraum: ${fmtDate(rawData[0].date)} – ${fmtDate(rawData[rawData.length-1].date)}`, 15, y); y += 5;
+  doc.text(`Gesamtverbrauch: ${(rawData[rawData.length-1].reading - rawData[0].reading).toFixed(3)} m³`, 15, y); y += 8;
 
   doc.setFont('helvetica', 'bold'); doc.text('Jahresübersicht', 15, y); y += 6;
   doc.setFont('helvetica', 'normal');
@@ -2743,13 +2835,20 @@ async function exportWasserPdf() {
   doc.autoTable({
     startY: 40,
     head: [['Datum', 'Zählerstand (m³)', 'Ableseart', 'Verbrauch seit letzter Ablesung']],
-    body: data.map((e, i) => [
+    body: enhanced.map((e, i) => [
       fmtDate(e.date), e.reading.toFixed(3),
-      READING_TYPES[e.type] ? READING_TYPES[e.type].replace(/^[^\s]+\s/, '') : '—',
-      i > 0 ? (e.reading - data[i-1].reading).toFixed(3) + ' m³' : '—'
+      e.interpolated ? 'Rechnerisch (interpoliert)'
+                     : (READING_TYPES[e.type] ? READING_TYPES[e.type].replace(/^[^\s]+\s/, '') : '—'),
+      i > 0 ? (e.reading - enhanced[i-1].reading).toFixed(3) + ' m³' : '—'
     ]),
     headStyles: { fillColor: [31, 74, 48] },
     styles: { font: 'helvetica', fontSize: 9 },
+    didParseCell: (data) => {
+      if (data.row.raw[2].includes('interpoliert')) {
+        data.cell.styles.textColor = [120, 120, 120];
+        data.cell.styles.fontStyle = 'italic';
+      }
+    },
   });
 
   doc.save(`${new Date().toISOString().split('T')[0]} Waldvilla Wangen Wasserversorgung.pdf`);
